@@ -16,7 +16,7 @@ rhino3dm 无需 Rhino 应用即可读写原生对象。`File3dm.Read()`、`Objec
 
 新增几何可以直接用 `NurbsCurve`、`NurbsSurface`、解析曲线、`Extrusion.CreateWithPlane()`、`AddInnerProfile()`、`Brep.CreateFrom...()`，然后 `doc.Objects.Add(geometry, attributes)`。通用 `ezarch.rhino.write_geometry(objects, target, units, tolerance)` 接收原生 geometry/attributes 对，不要求建筑 schema；需要复杂图层、材质或实例树时直接管理 File3dm。曲线闭合、孔洞方向、齐次 NURBS 权重和结点序列属于几何正确性，不能靠网格外观代替。
 
-Blender 用于主要三维制作；rhino3dm 保留精确文件读写与适用局部操作。跨入 Blender 的曲面通常使用网格，不能默认恢复为可精确编辑的 NURBS。CadQuery/STEP 主线暂缓，旧接口仅作兼容；详见 [交换边界](exchange-verification.md)。
+随库提供 Blender 三维制作与 rhino3dm 精确文件读写、局部操作的支持，按当前对象和目标选择。跨入 Blender 的曲面通常使用网格，不能默认恢复为可精确编辑的 NURBS。旧 CadQuery/STEP 接口未继续维护且需要独立依赖；详见 [交换边界](exchange-verification.md)。
 
 ## Blender
 

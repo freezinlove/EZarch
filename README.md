@@ -2,7 +2,7 @@
 
 **面向 AI 的建筑与空间表达工具指南。** 提供模块化的工具操作知识、Windows/macOS 基础设施和适用的技术制图参考。用户需求、参考内容和模型判断决定怎么设计、分析、绘制和交付；skill 提供帮助，不规定固定的制作流程。
 
-新创作、新设计及已有成果的修改，先提方案，用户确认后实施；方案形式与内容由具体任务决定。忠实复刻、复现可直接开展，目标是尽可能做到 1:1、细节完整一致。具体原则见 [Skill 入口](skills/ezarch/SKILL.md)。
+AI 可主动参与构思与设计。对于重要设计或实质改动，通常先简洁说明主要意图与取舍，让用户了解准备怎么做；说明后的行动由用户要求、已有授权和关键不确定性决定，不设统一的方案审批阶段。用户明确的合作偏好优先，具体原则见 [Skill 入口](skills/ezarch/SKILL.md)。
 
 ## 按需使用
 
@@ -10,6 +10,7 @@
 |---|---|
 | 二维 CAD / 技术线稿 | ezdxf，独立 Drawing |
 | 三维建模 / 场景 / 渲染 / 合成 | Blender Python、BMesh、Geometry Nodes、适用社区插件和资产 |
+| 图像构思 / 探索 / 素材 / 表现 | 宿主可用的生成式图像工具；不保证精确几何或跨视角一致 |
 | 模型剖切 / 正交可见线 | Blender 求值网格 + 可选几何与二维助手 |
 | 地图 / 分析图 / 图表 / 自由版式 | 原生 SVG、项目脚本、可选 Canvas/PDF 合成 |
 | 技术制图参考 | 适用的尺寸、轴线、标高、索引、比例等规则 |
@@ -17,7 +18,9 @@
 
 可以只用一个模块、直接调用原生 API、修改辅助脚本或完全绕过封装。已有文件和脚本可以继续使用。没有固定 task.yml、project.yml、quality.yml、四维验收表或全格式交付要求。辅助工具的参数约定只在调用该工具时生效。
 
-正常输入是 DWG、3DM、图片、PDF、链接和自然语言需求，用户无需预转换或填写配置。AI 可按需查阅 [读取定位](skills/ezarch/references/file-understanding.md)、[设计判断](skills/ezarch/references/design-judgment.md)、[规范适用](skills/ezarch/references/standards.md) 与 [连续修改](skills/ezarch/references/edit-existing.md)。成果仍需准确、充分深化、有空间逻辑并达到用户的视觉要求；工具成功日志不是设计质量证明。
+名称与描述帮助发现 skill；[入口导航](skills/ezarch/SKILL.md#按需发现能力) 按当前需要连接已有工具和知识；相关参考再展开调用方法、参数和局限，无需先读完整手册。新增能力时同步相应导航和参考，未实现的能力不列为可用。
+
+正常输入是 DWG、3DM、图片、PDF、链接和自然语言需求，用户无需预转换或填写配置。AI 可按需查阅 [读取定位](skills/ezarch/references/file-understanding.md)、[设计判断](skills/ezarch/references/design-judgment.md)、[规范适用](skills/ezarch/references/standards.md) 与 [连续修改](skills/ezarch/references/edit-existing.md)。成果的精度、深度、可编辑性和视觉要求以本次用途为准，讨论、草图和成品可以采用不同表达；工具成功日志不是设计质量证明。
 
 ## 安装与基础设施
 
@@ -41,13 +44,13 @@ core 含独立二维、参考提取、分析和排版助手；draft 保持独立
 
 ## 兼容与技术边界
 
-DWG/DXF 通过可选免费闭源 ODA 转换器双向适配。三维以 Blender 为核心，rhino3dm 保留原生对象读取/局部修改；Blender 可导出网格 3DM、GLB 和 DAE。Rhino 曲面导入通常需要文件内的显示网格，缺失网格的复杂 BRep 不能保证完整转换；网格不冒充 NURBS/BRep。CadQuery/STEP 主线暂缓，旧代码仅用于已有项目兼容，不由默认安装启用。商业应用控制、SKP 写入和 IFC 暂缓。
+DWG/DXF 通过可选免费闭源 ODA 转换器双向适配。随库重点支持 Blender 原生三维能力，rhino3dm 保留原生对象读取/局部修改；Blender 可导出网格 3DM、GLB 和 DAE。Rhino 曲面导入通常需要文件内的显示网格，缺失网格的复杂 BRep 不能保证完整转换；网格不冒充 NURBS/BRep。旧 CadQuery/STEP 路线目前未继续维护，需要独立 legacy-cad 依赖，不由默认安装启用。商业应用控制、SKP 写入和 IFC 未提供随库适配；这不限制任务使用其他可用工具。
 
 Blender 保留工程单位，几何快照和二维助手使用 mm，GLB 显式转换为 m；自由 SVG、地图或其他程序不必采用同一坐标体系。图纸缩放、字体和转换损失见 [格式说明](skills/ezarch/references/exchange-verification.md)。开放库回读不等于在目标商业软件中实际打开验收。
 
 原生入口可直接运行用户/AI 的脚本：`blender run <script.py> --source <existing.blend> --save <result.blend> --out <dir>`；无 source 时从空场景开始。`blender extract/export/view` 为可选网格交换和出图助手，见 [建模操作](skills/ezarch/references/blender-modeling.md)、[模型出图](skills/ezarch/references/geometry-drawings.md) 与 [社区接入](skills/ezarch/references/blender-ecosystem.md)。完整场景可继续直接使用 bpy，不要求统一 schema。
 
-`audit` 可按单文件或所选输出检查结构、单位和几何。旧 `review` 仅保留维护兼容，不属于常规作图入口。技术检查不裁定设计、规范合规或审美。
+`audit` 可按单文件或所选输出检查结构、单位和几何。旧 `review` 是依赖既有记录的可选兼容助手。技术检查不裁定设计、规范合规或审美。
 
 ## 仓库维护
 

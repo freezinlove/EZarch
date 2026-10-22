@@ -1,53 +1,42 @@
 ---
 name: ezarch
-description: Programmatic architectural drawings, Blender models and model-based visualization, diagrams and layouts. Use for architectural design or editing from DWG/3DM/BLEND/PDF/image/link references, with tool guidance and applicable drafting standards.
+description: Architectural design support and tools for reading, editing, drawing, modeling and visual expression. Use for architecture and spatial tasks from DWG/3DM/BLEND/PDF/image/link references, including design discussion, CAD edits, diagrams and visualization.
 ---
 
 # EZarch
 
-帮助 AI 用程序化工具实现用户要求的建筑与空间表达。用户需求、参考内容及其使用意图决定目标；模型判断设计、分析、表达、工具组合和工作安排。工具的默认值和封装能力不决定成果的类型、风格或深度。
+为建筑与空间任务提供可组合的读取、计算、绘制、建模、编辑、表达和交换能力，以及按需查阅的专业知识。目标、方法、工作顺序、表达深度与交付内容由用户需求和 AI 判断决定。可以只讨论、直接制作或局部修改；本 skill 不预设统一方案阶段、数据模型、成果类型或视觉风格。
 
-制作时建立、编辑实际图纸或模型，保留可继续编辑的源成果。三维透视、概念图和效果图也属于这个制作目标，通常由 Blender 模型与相机出图；二维任务可以直接使用 ezdxf、SVG 等，无需先建三维。本 skill 中生成式图像仅用于已完成设计成果的渲染替代，不代替构思、设计、作图或建模；使用边界见 [渲染](references/rendering.md#基于完成设计的生成式渲染)。
+支持 AI 主动参与构思与设计。对于将开展的重要设计或实质改动，通常先以适合当前任务的简洁表达，让用户了解主要意图、改动方向和重要取舍，便于纠正理解。表达可融入自然交流，不要求独立方案文档或固定内容结构。说明后是否直接推进，由用户要求、已有授权和关键不确定性决定；用户明确的合作偏好优先。具体交流与设计判断见 [设计支持](references/design-judgment.md#让方案能够被理解和判断)。
 
-对新创作、新设计，以及在已有成果基础上的修改，先向用户提出适合当前任务的详细的方案，待用户确认后实施。方案的内容、形式和详细程度，由用户需求、参考资料、项目特点及模型判断决定，不预设统一结构或必填内容。忠实复刻、复现可直接开展，以尽可能达到 1:1、细节完整一致为目标。
+随库工具可独立使用或组合，也可沿用现有项目、直接调用原生 API、自写脚本或选择其他可用能力。工具、资源入口和示例不是完整清单或优先顺序；可按任务查找其他资料与方法。参数、单位和默认值只约束对应接口，不决定设计。
 
-方案用于支持用户讨论与决策：围绕当前项目的关键问题，讲清依据、具体设计及其影响，让用户理解将做成什么、为什么这样做、哪些选择仍值得推敲。按决策所需展开，不能在关键问题尚未讲清时，仅凭简短摘要或一张图就索取确认。表达形式自由，图片辅助说明空间关系，关键论证在对话中讲清，见 [设计判断](references/design-judgment.md#让方案能够被理解和判断)。影响主要形象或空间的假设与制作方式在确认前讲清楚；具体细节仍可在已确认范围内深化。
+## 按需发现能力
 
-资料读取与分析可先行；已确认的方案无需重复确认，用户明确要求跳过方案确认时按其授权处理。
+按当前需要从下表选读相关参考，再按需查看命令帮助或源码签名；不必先读全部文档或运行环境检查。表中是已有入口与知识支持，操作细节和技术边界在对应参考中。命令的运行方式见 [环境入口](references/environment.md#操作入口)。
 
-依据提示词判断参考的作用和接近程度：空间方法、整体形象、材质氛围、表达风格或忠实复现可能各不相同。会导向明显不同成果且无法从上下文确定时再澄清；已明确的视觉相似要求不能自行降为抽象灵感，也不把每个参考都当作外形复制要求。指定资料读取不全时说明缺失及其影响；影响当前设计或验收依据时，取得用户对补充资料或按现有依据推进的选择，详见 [读取不足](references/file-understanding.md#读取不够时)。
+| 当前需要 | 已有能力或入口 | 按需查阅 |
+|---|---|---|
+| 理解参考、发展设计想法、解释取舍 | 参考解读与空间/表达判断知识 | [参考与尺度](references/design-reference.md)、[设计判断](references/design-judgment.md) |
+| 读取原文件、定位局部对象 | inspect / query；PDF、图片的 reference 提取 | [资料读取与查询](references/file-understanding.md) |
+| 修改已有 CAD、3DM、SVG 或 BLEND | edit、ezdxf、rhino3dm、XML/DOM、bpy | [原生操作与连续修改](references/edit-existing.md) |
+| 绘制二维图纸、尺寸与符号 | Drawing、ezdxf；不依赖先建三维 | [几何与图纸](references/geometry-drawings.md) |
+| 三维建模、节点、场景编辑 | bpy / BMesh；blender run / extract | [Blender 操作](references/blender-modeling.md) |
+| 从模型取得剖切、投影和可见线 | blender view 的可选网格出图助手 | [剖切与投影](references/geometry-drawings.md#blender-模型剖切与投影) |
+| 适用规范、纸面比例与技术符号 | 依据查询、可选中国制图样式 | [规范适用](references/standards.md)、[制图表达](references/chinese-drafting.md) |
+| 地图、环境或使用空间计算 | 太阳/影长、使用区、门扇扫掠与几何测量助手 | [地图与分析](references/site-analysis.md)、[空间测量](references/spatial-measurement.md) |
+| SVG、分析图、图表或排版 | 原生 SVG、Canvas、diagram / board | [矢量与排版](references/diagrams-boards.md) |
+| 材质、灯光、相机与图像表现 | bpy / render；宿主可用时的生成式图像 | [渲染与图像表达](references/rendering.md) |
+| 获取素材、接入插件和节点资产 | asset 下载器、原生导入与社区接入知识 | [素材入口](references/public-assets.md)、[社区能力](references/blender-ecosystem.md) |
+| 转换格式、回读或比较文件 | convert / blender export / audit / compare | [交换与检查](references/exchange-verification.md) |
+| 准备或排查运行环境 | doctor、按需 bootstrap、现有兼容环境 | [Windows/macOS 环境](references/environment.md) |
 
-模块供按需查阅，可以独立使用或组合。沿用现有项目、直接调用原生 API、修改辅助代码或另写脚本均可；不要求任务表、统一数据模型、固定流程、图量或交付包，也无需为未使用封装补写理由。具体接口的字段和单位只约束该接口。
+## 来源、精度与支持范围
 
-列出的工具、网站与方法是起点，不是完整清单或优先顺序。根据任务可主动联网查其他资料、资源和官方接口，选用其他适合的程序化方法。
+用户可直接提供原始文件和自然语言需求，AI 选择读取与必要转换。参考用途和接近程度按任务理解；源事实、推断与新增设计值分别表达。资料不足时说明实际缺口和影响，按 [读取不足](references/file-understanding.md#读取不够时) 处理；未知尺寸不冒充精确复原。修改既有工程时，用户最新文件及所选修改范围是依据，保留未涉及的内容。
 
-用户可直接提供原始文件与提示词。AI 负责读取、必要转换和工具选择，内部工作格式不由用户承担。修改已有项目时延续源文件的几何、对象及关系；用户提供的新版本优先于旧生成脚本。
+原生图纸、可编辑模型、矢量图和图像按需选择。生成式图像可用于构思、探索、素材或表现，但不保证尺寸和跨视角一致，也不等于已建立 CAD/模型。设计、视觉、规范与技术检查的结论各有依据；工具执行成功只说明它实际验证的事项。精细度和完成度以本次用途为准。
 
-理解、设计逻辑、适用规范、精度、必要细节和美感都属于成果要求。按本次阶段和用途做充分深化；概念表达不等于粗糙图形拼接，局部任务不必扩张成整套项目。源事实、推断与新增设计值分清，未知尺寸不能伪装成精确复原。
+随库维护 Windows/macOS 的 Blender 与开放 Python 工具支持、字体及轻量二维符号；DWG 可使用外部免费闭源 ODA，3DM 可进行适用的原生编辑或网格交换。网格不等于 NURBS/BRep。旧 [project.yml 助手](references/project-data.md) 是可选接口，model/views/draft 依赖非默认的 legacy-cad；CadQuery/STEP 路线目前未继续维护，商业应用控制、SKP 写入与 IFC 未提供随库适配。这些支持事实不限制使用环境中其他可用工具。
 
-## 工具入口
-
-| 当前需要 | 查阅内容 |
-|---|---|
-| 准备或排查环境 | [Windows/macOS 按需安装](references/environment.md) |
-| 理解 DWG/3DM/PDF/图片/链接及定位对象 | [原始资料读取](references/file-understanding.md)、[参考与尺度](references/design-reference.md) |
-| 设计、深化、判断空间与表达质量 | [建筑设计判断](references/design-judgment.md) |
-| 三维建模、场景理解、节点与局部编辑 | [Blender 建模与操作](references/blender-modeling.md) |
-| 新建 CAD、模型剖切、平立剖联动 | [几何与图纸](references/geometry-drawings.md) |
-| 修改已有 DXF/SVG/BLEND，二维三维衔接 | [原生操作与局部修改](references/edit-existing.md) |
-| 适用技术要求及制图表达 | [规范适用](references/standards.md)、[中国制图](references/chinese-drafting.md) |
-| 地图、统计、环境或使用空间计算 | [地图与分析参考](references/site-analysis.md)、[空间测量](references/spatial-measurement.md) |
-| SVG、分析图、图表或版面 | [矢量与排版](references/diagrams-boards.md) |
-| 材质、灯光、相机或素材 | [Blender 渲染](references/rendering.md)、[公开素材入口](references/public-assets.md) |
-| 插件、节点资产、社区工具接入 | [Blender 社区能力](references/blender-ecosystem.md) |
-| 格式转换、单位、文件回读 | [交换与检查](references/exchange-verification.md) |
-
-技术规范按地区、图种和阶段选用；模型依据本次要求判断设计、内容和视觉效果。运行成功、文件能打开或数值检查通过，只说明相应工具实际验证的事项。
-
-三维以 Blender 原生 Python 为主，可以直接创建和继续编辑完整 .blend；几何、节点、材质、灯光和表达方式由任务决定。按需复用社区插件及资产，也可自行编程，不受随库函数和默认值限制。旧 [project.yml 接口](references/project-data.md) 只用于已有兼容任务，不是新建模的入口要求。
-
-## 基础设施范围
-
-提供 Windows/macOS 的 Blender 与开放 Python 工具环境、字体及轻量二维符号；DWG 双向适配可选外部免费闭源 ODA。3DM 支持原生对象读取与局部编辑，以及适用的网格交换；网格不冒充 NURBS。CadQuery/STEP 主线、Rhino/SketchUp/AutoCAD 应用控制与 IFC 暂缓。具体边界见格式说明。
-
-三维素材按项目从公开可读取下载的来源获取；skill 不捆绑模型库或依赖个人素材目录。用户提供的模型和其他资料可直接使用。资料、素材与成果保存在项目中，仓库开发验证在库外进行。
+skill 不捆绑大型素材库，也不依赖作者个人目录；用户已有素材及任务授权下可访问的其他来源均可按需使用。资料、项目脚本、素材和成果保存在项目中，仓库开发验证在库外进行。

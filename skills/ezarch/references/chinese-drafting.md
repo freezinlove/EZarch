@@ -20,7 +20,7 @@
 | 尺寸 | §11.1–11.3 | 真值、细尺寸线、斜短线；界线离轮廓≥2mm，超线2–3mm；分尺寸靠近图形、总尺寸置于外侧，间距按图面组织 |
 | 标高 | §11.8 | 三角尖端对应高度；m、三位小数；零为±0.000，正值不写＋ |
 
-样式参数见 assets/drafting/china-conventions.yml。Drawing 的 style 可覆写 pens_mm、axis_circle_diameter_mm、index_circle_diameter_mm、north_circle_diameter_mm、section_position_length_mm、section_direction_length_mm、excluded_axis_labels，这些参数实际用于生成图元。线宽分配、默认字体和采用的具体符号尺寸是本库的样式选择；是否满足适用条文仍按本次要求判断。附带字体为开放仿宋风格 TTF，并非微软字体或工程 SHX。字体选择由任务决定；其他字体和符号可直接通过 ezdxf/SVG 或项目适配器使用。
+样式参数见 assets/drafting/china-conventions.yml。Drawing 的 style 可覆写 pens_mm、axis_circle_diameter_mm、index_circle_diameter_mm、north_circle_diameter_mm、section_position_length_mm、section_direction_length_mm、excluded_axis_labels，这些参数实际用于生成图元。默认加载的中国制图样式不是所有任务的规定；轴号排除规则也属于该样式，可按所用规则覆盖。线宽分配、默认字体和采用的具体符号尺寸是本库的样式选择；是否满足适用条文仍按本次要求判断。附带字体为开放仿宋风格 TTF，并非微软字体或工程 SHX。字体选择由任务决定；其他字体和符号可直接通过 ezdxf/SVG 或项目适配器使用。
 
 ## 技术图可涉及的内容（按阶段选用）
 

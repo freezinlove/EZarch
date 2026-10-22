@@ -1,4 +1,4 @@
 interface:
   display_name: "EZarch"
-  short_description: "Programmatic architectural drawings and Blender models"
-  default_prompt: "Use $ezarch to realize my architectural request programmatically, following my requirements and references while choosing suitable tools and methods."
+  short_description: "Architectural design support, CAD and visual tools"
+  default_prompt: "Use $ezarch to help with my architectural or spatial task, choosing suitable capabilities for my requirements and references."

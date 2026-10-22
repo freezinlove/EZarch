@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Align skill instructions with optional architectural capabilities: remove universal proposal approval, output-type and generative-image restrictions while retaining technical limits and user scope.
+- Explain important design intentions before substantive work by default, with communication and continuation guided by user preferences, existing authorization and unresolved questions.
+- Keep progressive disclosure through task-oriented capability navigation and focused references; update UI metadata and clarify maintained tools, legacy interfaces and configurable drafting styles.
+- Documentation and metadata only; runtime behavior, dependency management and update tooling are unchanged.
+
 ## 0.6.0
 
 - Make native Blender Python the primary 3D route, with optional script execution, evaluated mesh extraction, GLB/3DM/DAE exchange and mesh-based sections/hidden-line projections.

@@ -1,6 +1,6 @@
 # Blender 建模、理解与连续编辑
 
-Blender 是三维主工具。原生 bpy、BMesh、曲线、修改器、Geometry Nodes、材质节点和场景能力均可按任务使用。下面是操作知识与可选助手；不要求固定建模步骤、对象目录、相机数量、风格或项目配置。渲染见 [rendering](rendering.md)，社区工具见 [ecosystem](blender-ecosystem.md)。
+Blender 是随库重点支持的三维工具，不规定任务中的工具优先级。原生 bpy、BMesh、曲线、修改器、Geometry Nodes、材质节点和场景能力均可按任务使用。下面是操作知识与可选助手；不要求固定建模步骤、对象目录、相机数量、风格或项目配置。渲染见 [rendering](rendering.md)，社区工具见 [ecosystem](blender-ecosystem.md)。
 
 ## 运行与续改
 

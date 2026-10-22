@@ -1,6 +1,6 @@
 # 几何与二维技术图纸
 
-三维主线是 [Blender 原生建模](blender-modeling.md)，二维 CAD 可直接使用 ezdxf，图解和排版可用 SVG/PDF。模块独立；是否从二维建模、从模型出图或共享参数，由任务决定。
+随库提供 [Blender 原生建模](blender-modeling.md) 操作知识与助手，二维 CAD 可直接使用 ezdxf，图解和排版可用 SVG/PDF。模块独立；是否从二维建模、从模型出图或共享参数，由任务决定。
 
 ## 独立二维
 
@@ -32,4 +32,4 @@
 
 ## 既有兼容接口
 
-旧 `model/views/draft <project.yml>`、geometry.Part 和 OCCT 投影代码仅保留已有项目兼容，依赖独立 legacy-cad extra；默认任何安装 profile 都不启用它。新工作不引导到这条路线，STEP 精确实体主线暂缓。已有旧项目可按授权环境继续维护，详见 [旧参数接口](project-data.md)。
+旧 `model/views/draft <project.yml>`、geometry.Part 和 OCCT 投影代码目前未继续维护，依赖独立 legacy-cad extra；任何默认安装 profile 都不启用它。已有项目可以继续使用，其他任务也可在了解依赖与局限后按需选择；这里描述维护状态，不禁止精确实体或其他可用工具路线。详见 [可选参数接口](project-data.md)。

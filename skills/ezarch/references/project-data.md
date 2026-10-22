@@ -1,6 +1,6 @@
 # Optional project.yml API
 
-> 旧 project.yml 兼容接口：新三维工作使用 Blender 原生 API，见 [建模操作](blender-modeling.md)。model/views/draft 依赖已暂缓的 legacy-cad；默认安装不启用。该文档的构件、字段和材质范围仅适用于旧助手。
+> 可选 project.yml 兼容接口：model/views/draft 所用的旧 CadQuery/OCCT 路线目前未继续维护，依赖独立 legacy-cad，默认安装不启用。该文档的构件、字段和材质范围仅适用于这些助手；可按任务选用，也可使用 [Blender 原生 API](blender-modeling.md)、独立二维工具或其他能力。
 
 This is the input contract for the optional `model`, `views`, `brief` and `diagram` helpers, not a universal project schema. Use it only when invoking those helpers. Existing files, direct ezdxf/bpy/CadQuery calls, SVG, CSV, image coordinates and other project structures do not need to adopt it.
 
@@ -42,7 +42,7 @@ Landscape: `kind: tree`, position [x,y,z], height, crown_radius and stable seed.
 
 For a CAD model supplied as STEP, use a `kind: step` element with `file`, `material` and optional `origin`; the STEP file is resolved relative to the project YAML and hashed as a dependency. For 2D-to-3D use `kind: dxf_extrusion`, `file`, `layer`, `height`: it converts documented DXF units to mm and extrudes closed, straight XY LWPOLYLINE boundaries. Unitless, curved, overlapping, nested or nonplanar boundaries fail explicitly so the AI can resolve their semantics in a project script. Original files are never modified. For external meshes use Blender's supported importers or trimesh and explicitly resolve units. Existing DXF layers, entities and blocks can be inspected or edited with ezdxf. Extrusion heights may come from supplied dimensions or explicit design assumptions, as the task permits.
 
-The optional Project schema is not a universal raw-file importer. Use the independent inspect/edit/convert tools for DWG and native 3DM; SKP and arbitrary curved-BRep conversion remain outside this schema. Generated exchange formats and target-app import are described in [exchange-verification.md](exchange-verification.md); they do not imply universal native object support. Native control remains deferred.
+The optional Project schema is not a universal raw-file importer. Use the independent inspect/edit/convert tools for DWG and native 3DM; SKP and arbitrary curved-BRep conversion remain outside this schema. Generated exchange formats and target-app import are described in [exchange-verification.md](exchange-verification.md); they do not imply universal native object support. Native application control is not provided by this package; other available tools may be used as appropriate.
 
 
 ## Optional semantic and expression fields
