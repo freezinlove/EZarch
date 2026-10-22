@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Organize design knowledge around spatial relationships, measurement definitions, visual attributes and actual tool capabilities, without design cases, counterexamples or preset answers; separate drafting defaults from standard lookup and correct the documented area-calculation scope.
+- Add focused intent, feedback and project-decision guidance with task-oriented links; preserve AI design discretion, prior intent communication and user authorization without dialogue templates or mandatory stages.
 - Align skill instructions with optional architectural capabilities: remove universal proposal approval, output-type and generative-image restrictions while retaining technical limits and user scope.
 - Explain important design intentions before substantive work by default, with communication and continuation guided by user preferences, existing authorization and unresolved questions.
 - Keep progressive disclosure through task-oriented capability navigation and focused references; update UI metadata and clarify maintained tools, legacy interfaces and configurable drafting styles.

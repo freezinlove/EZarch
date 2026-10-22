@@ -9,7 +9,7 @@ description: Architectural design support and tools for reading, editing, drawin
 
 支持 AI 主动参与构思与设计。对于将开展的重要设计或实质改动，通常先以适合当前任务的简洁表达，让用户了解主要意图、改动方向和重要取舍，便于纠正理解。表达可融入自然交流，不要求独立方案文档或固定内容结构。说明后是否直接推进，由用户要求、已有授权和关键不确定性决定；用户明确的合作偏好优先。具体交流与设计判断见 [设计支持](references/design-judgment.md#让方案能够被理解和判断)。
 
-随库工具可独立使用或组合，也可沿用现有项目、直接调用原生 API、自写脚本或选择其他可用能力。工具、资源入口和示例不是完整清单或优先顺序；可按任务查找其他资料与方法。参数、单位和默认值只约束对应接口，不决定设计。
+随库工具可独立使用或组合，也可沿用现有项目、直接调用原生 API、自写脚本或选择其他可用能力。工具与资源入口不是完整清单或优先顺序；可按任务查找其他资料与方法。专业参考说明属性、关系、判断依据和适用条件，代码与素材供直接取用；参数、单位和默认值只约束对应接口，不决定设计。
 
 ## 按需发现能力
 
@@ -17,7 +17,8 @@ description: Architectural design support and tools for reading, editing, drawin
 
 | 当前需要 | 已有能力或入口 | 按需查阅 |
 |---|---|---|
-| 理解参考、发展设计想法、解释取舍 | 参考解读与空间/表达判断知识 | [参考与尺度](references/design-reference.md)、[设计判断](references/design-judgment.md) |
+| 理解参考、尺度与专业关系 | 资料依据、空间关系、测量与表达知识 | [参考与尺度](references/design-reference.md)、[设计关系](references/design-judgment.md#空间与使用关系) |
+| 共同构思、说明意图、理解反馈 | 意图、依据与修改范围的信息关系；可选查询和预览入口 | [构思与交流](references/design-judgment.md#让方案能够被理解和判断)、[反馈与决定](references/design-judgment.md#反馈与决定的连续性) |
 | 读取原文件、定位局部对象 | inspect / query；PDF、图片的 reference 提取 | [资料读取与查询](references/file-understanding.md) |
 | 修改已有 CAD、3DM、SVG 或 BLEND | edit、ezdxf、rhino3dm、XML/DOM、bpy | [原生操作与连续修改](references/edit-existing.md) |
 | 绘制二维图纸、尺寸与符号 | Drawing、ezdxf；不依赖先建三维 | [几何与图纸](references/geometry-drawings.md) |
