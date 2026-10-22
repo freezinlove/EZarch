@@ -4,9 +4,22 @@
 
 ## 独立二维
 
-`ezarch.drafting.Drawing(bounds, scale, title, number, style=None, font=None)` 可输出同源 DXF/PDF/SVG/PNG。bounds、物体坐标以模型 mm 输入；scale 为比例分母，文字和笔宽用纸面 mm。方法包括 poly、text、axis、dimension、chain、level、north、section_mark、index、leader、furniture；签名见 src/ezarch/drafting.py。默认不添加图框或比例尺。样式、字体和组合由任务决定。
+`ezarch.drafting.Drawing(bounds, scale=100, title="", number="", margin=12, *, style=None, font=None)` 新建文档，可输出 DXF/PDF/SVG/PNG。bounds、物体坐标以模型 mm 输入；scale 为比例分母，文字和笔宽用纸面 mm。方法包括 poly、text、axis、dimension、chain、level、north、section_mark、index、leader、furniture；签名见 [drafting.py](../src/ezarch/drafting.py)。默认不添加图框或比例尺。样式、字体和组合由任务决定。
 
 需要特殊线型、块、斜向/径向尺寸时直接用 ezdxf；修改已有 CAD 可保留原图层、块、布局和样式。见 [中国制图](chinese-drafting.md) 与 [连续修改](edit-existing.md)。
+
+## 绘制到已有文档
+
+`Drawing.from_layout(layout, *, scale, unit_mm, style=None, text_style="Standard", dimstyle="Standard", resource_policy="rename")` 接收已附属文档的 ezdxf modelspace、paperspace 或 block。支持 DXF R2000 及以上；绑定不新建文档、不改变源单位或视口、不创建 Canvas，不要求完整项目数据。
+
+- 几何点和半径使用目标自身坐标；`unit_mm` 是每目标单位的 mm 数，`scale` 是物理比例分母。纸面字高与符号尺寸乘 `scale / unit_mm` 后写入目标。不从 doc.units 猜测纸空间或图块单位；这两个参数由调用者按目标提供。
+- `dimension/chain` 仍仅支持目标坐标中的水平/竖直尺寸；显示值和 `dimensions[].measured_mm` 按 mm，原生实测值仍是目标单位。尺寸样式长度按纸面 mm 解释，单个尺寸的 `dimscale` 按 `scale / unit_mm` 设置，避免既有全局缩放再次放大字高或遗漏文字间隙；源样式不变。`level` 的 `value_mm` 仍为 mm。其他单位标注与斜向尺寸可用原生接口。
+- 新旧两种入口的绘制方法均返回本次新增的原生实体元组；`entities` 汇总该助手新增的目标实体，尺寸测量在 `dimensions`。尺寸的匿名图块等附属资源由 ezdxf 管理，不列入目标实体元组。返回对象可直接通过原生 API 调整。
+- `text_style`、`dimstyle` 使用源文档已有定义；缺失时报错，不自动替换字体。所需图层/轴线线型在绘制时创建。`rename` 为同名冲突另取名称；`reuse` 明确沿用现有定义，均不覆盖源定义。同名图层被冻结或采用不同线宽时，复用即保留其状态。
+- `style` 仍可调整随库符号与笔宽默认值。当前 `color/width/dash/fill` 在 DXF 与 Canvas 中的映射尚未完全一致：DXF 线条主要采用图层属性，dash 选择轴线线型，填充仍为外环且颜色为 ACI 7；可通过返回实体修改。不将绑定能力称为多格式样式一致性已完成。
+- 绑定模式不使用 `Drawing.save()`；调用者用 `doc.saveas(...)` 保存完整文档，或按需采用原生渲染/转换。没有只包含新增内容的 Canvas 预览，也不会把它冒充源图完整预览。
+
+位置或方向计算可单独使用 [二维坐标工具](coordinate-transforms.md)。绑定接口不自动转换整张图的坐标、旋转尺寸或处理任意实体 OCS，也不修改既有图元；绘制内容与调用组合由任务决定。
 
 ## Blender 模型剖切与投影
 

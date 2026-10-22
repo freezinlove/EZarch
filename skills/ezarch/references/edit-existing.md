@@ -8,6 +8,8 @@
 
 可选 `edit <source> <output> --ids <handles> --move dx dy dz` 或 `--text <text>` 支持 DWG/DXF 全文档局部修改；坐标为源单位，保存单独文件。`--expected-sha256` 可约束编辑所依据的版本。复杂设计直接调用 ezdxf API：实体变换、块参照、HATCH 边界、弧/样条、DIMENSION、布局与样式，不受小助手提供的两种操作限制。
 
+需要复用随库标注与符号时，可用 [Drawing.from_layout](geometry-drawings.md#绘制到已有文档) 绑定已有模型空间、纸空间或图块；目标单位、比例与样式由调用者提供，保存仍由原文档管理。独立二维数值映射见 [坐标计算](coordinate-transforms.md)，不替代原生实体变换。
+
 块定义修改影响其所有实例；修改插入参照只改变该次放置。MINSERT 阵列、非均匀缩放、实体 OCS 与世界 WCS 不可混淆。多段线保留 bulge/closed/elevation，填充保留外环与孔洞，尺寸保留实测定义与样式，文字核对字体及 SHX/bigfont。绘图前端可用于检查，不能只抽取 LINE 就据此理解图纸。详见 [ezdxf drawing](https://ezdxf.readthedocs.io/en/stable/addons/drawing.html)、[实体导入边界](https://ezdxf.readthedocs.io/en/stable/xref.html)。
 
 ## Rhino 文件与精确实体

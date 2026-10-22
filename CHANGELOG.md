@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Extract independent 2D affine and paper-coordinate calculations, with explicit scope and task-based discovery; keep project-specific geometry, placement and orchestration outside the library.
+- Add Drawing.from_layout for existing DXF modelspace, paperspace and blocks, explicit unit/scale handling, non-overwriting resource selection and returned native entities; bound drawings do not create previews or save automatically.
 - Organize design knowledge around spatial relationships, measurement definitions, visual attributes and actual tool capabilities, without design cases, counterexamples or preset answers; separate drafting defaults from standard lookup and correct the documented area-calculation scope.
 - Add focused intent, feedback and project-decision guidance with task-oriented links; preserve AI design discretion, prior intent communication and user authorization without dialogue templates or mandatory stages.
 - Align skill instructions with optional architectural capabilities: remove universal proposal approval, output-type and generative-image restrictions while retaining technical limits and user scope.

@@ -41,6 +41,7 @@ src/ezarch/diagrams.py
 src/ezarch/drafting.py
 src/ezarch/environment.py
 src/ezarch/exchange.py
+src/ezarch/frames.py
 src/ezarch/geometry.py
 src/ezarch/graphics.py
 src/ezarch/intake.py
@@ -62,3 +63,4 @@ src/ezarch/mesh_views.py
 scripts/blender_bridge.py
 references/blender-modeling.md
 references/blender-ecosystem.md
+references/coordinate-transforms.md

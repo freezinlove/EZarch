@@ -49,7 +49,7 @@ GB/T 50104—2010 的目录另列图线与比例、图例、图样画法和尺�
 | `north / section_mark / index / leader` | 北针旋转、剖切位置与方向、索引号及图号、引线及文字；对应关系由调用者传入 |
 | `furniture` | 按类型、外廓尺寸、原点与旋转生成可编辑线条；当前提供简化图形，不推导实际使用区 |
 
-接口约定只作用于这次调用。当前 `Drawing` 构造器新建文档；编辑既有文件可用 [原生操作](edit-existing.md)，不宣称已经提供既有文档绑定。原生 ezdxf 的 ARC、块和 HATCH 能力可用于自定义表达；支持范围见 [几何与图纸](geometry-drawings.md)。
+接口约定只作用于这次调用。`Drawing` 构造器新建文档；`Drawing.from_layout(...)` 可绑定已有模型空间、纸空间或图块，坐标采用目标单位，纸面尺寸、样式与保存约定见 [已有文档绑定](geometry-drawings.md#绘制到已有文档)。原生 ezdxf 的 ARC、块和 HATCH 能力可用于自定义表达；编辑既有实体见 [原生操作](edit-existing.md)。
 
 ## 图元、测量与输出的对应关系
 

@@ -34,7 +34,7 @@ only-include = [
   "src/ezarch/__init__.py", "src/ezarch/analysis.py", "src/ezarch/assets.py",
   "src/ezarch/audit.py", "src/ezarch/board.py", "src/ezarch/cli.py",
   "src/ezarch/diagrams.py", "src/ezarch/drafting.py", "src/ezarch/environment.py",
-  "src/ezarch/exchange.py", "src/ezarch/geometry.py", "src/ezarch/graphics.py",
+  "src/ezarch/exchange.py", "src/ezarch/frames.py", "src/ezarch/geometry.py", "src/ezarch/graphics.py",
   "src/ezarch/intake.py", "src/ezarch/project.py", "src/ezarch/quality.py",
   "src/ezarch/render.py", "src/ezarch/views.py",
   "src/ezarch/cad.py", "src/ezarch/inspection.py", "src/ezarch/rhino.py", "src/ezarch/file_cli.py",
