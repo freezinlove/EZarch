@@ -18,6 +18,7 @@ references/edit-existing.md
 references/environment.md
 references/exchange-verification.md
 references/geometry-drawings.md
+references/geometry-diagnostics.md
 references/project-data.md
 references/public-assets.md
 references/rendering.md
@@ -44,6 +45,8 @@ src/ezarch/environment.py
 src/ezarch/exchange.py
 src/ezarch/frames.py
 src/ezarch/geometry.py
+src/ezarch/walls.py
+src/ezarch/diagnostics.py
 src/ezarch/graphics.py
 src/ezarch/intake.py
 src/ezarch/project.py

@@ -35,6 +35,8 @@ ODA 官方提供免费的闭源 File Converter，支持 macOS/Windows和命令�
 
 `inspect/query/compare` 为原始文件提供版本绑定查询；`audit <file|directory|project.yml> --out <dir>` 为文件回读或随库输出关系检查。随库只生成所选格式，不要求无关同名配套文件；项目比对可用 `--outputs`。二者不判断设计、美感、全部技术合规或目标软件行为。
 
+所选直边区域/路径还可单独使用 [几何观测与定位](geometry-diagnostics.md)，取得有效性、短边、回折及精确重复的事实、候选和覆盖信息。空输入、未支持对象及缺失范围不会获得整体通过结论；是否进一步查看或使用其他检查由任务决定。
+
 开放库回读、转换回转、在 AutoCAD/Rhino/SketchUp 中实际打开继续编辑分别记录。未做商业软件验收时如实说明；不能从扩展名推断已通过。用户再次提供修改后的文件时，以新版本为依据接续工作。
 
 技术依据：[rhino3dm](https://github.com/mcneel/rhino3dm)、[BRep API](https://mcneel.github.io/rhino3dm/python/api/Brep.html)、[CadQuery交换](https://cadquery.readthedocs.io/en/latest/importexport.html)、[glTF单位与坐标](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#coordinate-system-and-units)。原生商业应用控制、SKP 写入和 IFC 未提供随库适配；DWG/3DM 文件适配仍可独立使用。未捆绑、未维护与当前机器不可用是不同状态，任务可选择其他实际可用的工具。

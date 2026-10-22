@@ -23,6 +23,7 @@ description: Architectural design support and tools for reading, editing, drawin
 | 修改已有 CAD、3DM、SVG 或 BLEND | edit、ezdxf、rhino3dm、XML/DOM、bpy | [原生操作与连续修改](references/edit-existing.md) |
 | 绘制二维图纸、尺寸与符号 | Drawing 新建或绑定已有 DXF；可调绘图属性、孔洞和文字定位；ezdxf | [几何与图纸](references/geometry-drawings.md) |
 | 转换二维坐标、方向或纸面位置 | 独立仿射计算、逆变换与 Shapely 适配 | [坐标计算](references/coordinate-transforms.md) |
+| 测量所选轮廓、定位几何疑点 | 只读区域有效性、短边、回折及精确重复检查；对象范围与裁图定位 | [几何观测与边界](references/geometry-diagnostics.md) |
 | 三维建模、节点、场景编辑 | bpy / BMesh；blender run / extract | [Blender 操作](references/blender-modeling.md) |
 | 从模型取得剖切、投影和可见线 | blender view 的可选网格出图助手 | [剖切与投影](references/geometry-drawings.md#blender-模型剖切与投影) |
 | 适用规范、纸面比例与技术符号 | 依据查询、可选中国制图样式 | [规范适用](references/standards.md)、[制图表达](references/chinese-drafting.md) |
@@ -37,7 +38,7 @@ description: Architectural design support and tools for reading, editing, drawin
 
 用户可直接提供原始文件和自然语言需求，AI 选择读取与必要转换。参考用途和接近程度按任务理解；源事实、推断与新增设计值分别表达。资料不足时说明实际缺口和影响，按 [读取不足](references/file-understanding.md#读取不够时) 处理；未知尺寸不冒充精确复原。修改既有工程时，用户最新文件及所选修改范围是依据，保留未涉及的内容。
 
-原生图纸、可编辑模型、矢量图和图像按需选择。生成式图像可用于构思、探索、素材或表现，但不保证尺寸和跨视角一致，也不等于已建立 CAD/模型。设计、视觉、规范与技术检查的结论各有依据；工具执行成功只说明它实际验证的事项。精细度和完成度以本次用途为准。
+原生图纸、可编辑模型、矢量图和图像按需选择。生成式图像可用于构思、探索、素材或表现，但不保证尺寸和跨视角一致，也不等于已建立 CAD/模型。设计、视觉、规范与技术检查的结论各有依据；工具执行成功只说明它实际验证的事项。“未发现问题”只适用于已检查范围；AI 可结合原始资料、设计意图和其他证据解释、补充或推翻候选判断。精细度和完成度以本次用途为准。
 
 随库维护 Windows/macOS 的 Blender 与开放 Python 工具支持、字体及轻量二维符号；DWG 可使用外部免费闭源 ODA，3DM 可进行适用的原生编辑或网格交换。网格不等于 NURBS/BRep。旧 [project.yml 助手](references/project-data.md) 是可选接口，model/views/draft 依赖非默认的 legacy-cad；CadQuery/STEP 路线目前未继续维护，商业应用控制、SKP 写入与 IFC 未提供随库适配。这些支持事实不限制使用环境中其他可用工具。
 

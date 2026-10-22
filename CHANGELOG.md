@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add optional read-only planar validity, short-edge, reversal and exact-duplicate observations with explicit parameters, coverage gaps, source locations and crop bounds. Narrow native DXF selection support reports unsupported inputs; results provide evidence rather than architectural approval or automatic repairs.
 - Preserve explicit drawing colors, DXF-supported paper lineweights and dash/gap lengths across CAD and vector outputs; retain layer inheritance without overwriting source resources. Add real polygon holes and font-based text anchor/rotation mapping, with format limits documented at the optional interfaces.
 - Extract independent 2D affine and paper-coordinate calculations, with explicit scope and task-based discovery; keep project-specific geometry, placement and orchestration outside the library.
 - Add Drawing.from_layout for existing DXF modelspace, paperspace and blocks, explicit unit/scale handling, non-overwriting resource selection and returned native entities; bound drawings do not create previews or save automatically.

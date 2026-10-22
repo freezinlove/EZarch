@@ -2,6 +2,8 @@
 
 随库提供 [Blender 原生建模](blender-modeling.md) 操作知识与助手，二维 CAD 可直接使用 ezdxf，图解和排版可用 SVG/PDF。模块独立；是否从二维建模、从模型出图或共享参数，由任务决定。
 
+所选二维区域/路径的有效性、短边、回折及精确重复可用独立的 [几何观测与定位](geometry-diagnostics.md)。结果包含实际范围和未检查内容，诊断不修改源图，也不代替设计判断。
+
 ## 独立二维
 
 `ezarch.drafting.Drawing(bounds, scale=100, title="", number="", margin=12, *, style=None, font=None)` 新建文档，可输出 DXF/PDF/SVG/PNG。bounds、物体坐标以模型 mm 输入；scale 为比例分母，文字和笔宽用纸面 mm。方法包括 poly、text、axis、dimension、chain、level、north、section_mark、index、leader、furniture；签名见 [drafting.py](../src/ezarch/drafting.py)。默认不添加图框或比例尺。样式、字体和组合由任务决定。
