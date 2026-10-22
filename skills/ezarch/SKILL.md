@@ -21,7 +21,7 @@ description: Architectural design support and tools for reading, editing, drawin
 | 共同构思、说明意图、理解反馈 | 意图、依据与修改范围的信息关系；可选查询和预览入口 | [构思与交流](references/design-judgment.md#让方案能够被理解和判断)、[反馈与决定](references/design-judgment.md#反馈与决定的连续性) |
 | 读取原文件、定位局部对象 | inspect / query；PDF、图片的 reference 提取 | [资料读取与查询](references/file-understanding.md) |
 | 修改已有 CAD、3DM、SVG 或 BLEND | edit、ezdxf、rhino3dm、XML/DOM、bpy | [原生操作与连续修改](references/edit-existing.md) |
-| 绘制二维图纸、尺寸与符号 | Drawing 新建或绑定已有 DXF 目标；ezdxf | [几何与图纸](references/geometry-drawings.md) |
+| 绘制二维图纸、尺寸与符号 | Drawing 新建或绑定已有 DXF；可调绘图属性、孔洞和文字定位；ezdxf | [几何与图纸](references/geometry-drawings.md) |
 | 转换二维坐标、方向或纸面位置 | 独立仿射计算、逆变换与 Shapely 适配 | [坐标计算](references/coordinate-transforms.md) |
 | 三维建模、节点、场景编辑 | bpy / BMesh；blender run / extract | [Blender 操作](references/blender-modeling.md) |
 | 从模型取得剖切、投影和可见线 | blender view 的可选网格出图助手 | [剖切与投影](references/geometry-drawings.md#blender-模型剖切与投影) |

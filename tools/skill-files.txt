@@ -39,6 +39,7 @@ src/ezarch/board.py
 src/ezarch/cli.py
 src/ezarch/diagrams.py
 src/ezarch/drafting.py
+src/ezarch/_drawing.py
 src/ezarch/environment.py
 src/ezarch/exchange.py
 src/ezarch/frames.py

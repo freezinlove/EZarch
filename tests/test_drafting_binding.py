@@ -1,14 +1,13 @@
 """Existing-document preservation and independent drawing in native target units."""
 import os
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 import ezdxf
-from ezdxf.lldxf.tagwriter import TagCollector
 import pytest
-
 from ezarch.drafting import Drawing
+from ezdxf.lldxf.tagwriter import TagCollector
 
 
 def tags(entity):
@@ -91,7 +90,9 @@ def test_resource_reuse_is_explicit_and_does_not_rewrite_definitions(tmp_path):
     before = tags(doc.layers.get("A-VISIBLE")), tags(doc.linetypes.get("EZ-GRID"))
     d = Drawing.from_layout(doc.modelspace(), scale=100, unit_mm=1000, resource_policy="reuse")
     entity, = d.line((0, 0), (4, 0), dash=[10, 2])
-    assert entity.dxf.layer == "A-VISIBLE" and entity.dxf.linetype == "EZ-GRID"
+    assert entity.dxf.layer == "A-VISIBLE"
+    # Explicit lengths take precedence over the unrelated existing axis definition.
+    assert doc.linetypes.get(entity.dxf.linetype).simplified_line_pattern() == pytest.approx([1, .2])
     assert (tags(doc.layers.get("A-VISIBLE")), tags(doc.linetypes.get("EZ-GRID"))) == before
 
 

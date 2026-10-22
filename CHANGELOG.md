@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Preserve explicit drawing colors, DXF-supported paper lineweights and dash/gap lengths across CAD and vector outputs; retain layer inheritance without overwriting source resources. Add real polygon holes and font-based text anchor/rotation mapping, with format limits documented at the optional interfaces.
 - Extract independent 2D affine and paper-coordinate calculations, with explicit scope and task-based discovery; keep project-specific geometry, placement and orchestration outside the library.
 - Add Drawing.from_layout for existing DXF modelspace, paperspace and blocks, explicit unit/scale handling, non-overwriting resource selection and returned native entities; bound drawings do not create previews or save automatically.
 - Organize design knowledge around spatial relationships, measurement definitions, visual attributes and actual tool capabilities, without design cases, counterexamples or preset answers; separate drafting defaults from standard lookup and correct the documented area-calculation scope.
@@ -9,7 +10,7 @@
 - Align skill instructions with optional architectural capabilities: remove universal proposal approval, output-type and generative-image restrictions while retaining technical limits and user scope.
 - Explain important design intentions before substantive work by default, with communication and continuation guided by user preferences, existing authorization and unresolved questions.
 - Keep progressive disclosure through task-oriented capability navigation and focused references; update UI metadata and clarify maintained tools, legacy interfaces and configurable drafting styles.
-- Documentation and metadata only; runtime behavior, dependency management and update tooling are unchanged.
+- The E01/E02/E21 changes affect documentation and metadata; dependency management and update tooling remain unchanged.
 
 ## 0.6.0
 

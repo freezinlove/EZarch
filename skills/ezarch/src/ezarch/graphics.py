@@ -4,13 +4,39 @@ from __future__ import annotations
 import base64
 import html
 import math
+from functools import lru_cache
 from pathlib import Path
 
 import pymupdf as fitz
 
+from ._drawing import css_color, dash_pattern, paper_width, points_2d, polygon_rings
 from .project import skill_root, write_json
 
 PT = 72 / 25.4
+
+
+@lru_cache(maxsize=32)
+def _cap_metrics(path):
+    """Match CAD cap-height/baseline semantics using the selected font's outlines."""
+    from fontTools.pens.boundsPen import BoundsPen
+    from fontTools.ttLib import TTFont
+
+    with TTFont(path) as font:
+        glyphs, cmap = font.getGlyphSet(), font.getBestCmap()
+        bounds = []
+        for char in "xA":
+            if ord(char) not in cmap:
+                raise ValueError("Cap-height sizing requires x/A font metrics; use em sizing or another font")
+            pen = BoundsPen(glyphs)
+            glyphs[cmap[ord(char)]].draw(pen)
+            if pen.bounds is None:
+                raise ValueError("Missing x/A font outlines for cap-height sizing")
+            bounds.append(pen.bounds)
+        baseline, units = bounds[0][1], font["head"].unitsPerEm
+        cap = bounds[1][3] - baseline
+        if cap <= 0:
+            raise ValueError("Positive cap height required")
+        return cap / units, baseline / units
 
 
 def rgb(value):
@@ -32,9 +58,11 @@ class Canvas:
         self.items = []
         self.rect(0, 0, width, height, fill=background, stroke=None)
 
-    def poly(self, points, stroke="#30332f", width=0.18, fill=None, close=False, dash=None, tag=""):
-        self.items.append(dict(kind="poly", points=[list(p) for p in points], stroke=stroke,
-                               width=width, fill=fill, close=close, dash=dash, tag=tag))
+    def poly(self, points, stroke="#30332f", width=0.18, fill=None, close=False, dash=None, tag="", *, holes=()):
+        stroke, fill = css_color(stroke), css_color(fill)
+        points, holes = polygon_rings(points, holes, close, fill)
+        self.items.append(dict(kind="poly", points=points, holes=holes, stroke=stroke,
+                               width=paper_width(width), fill=fill, close=close, dash=dash_pattern(dash), tag=tag))
 
     def line(self, x1, y1, x2, y2, **kwargs):
         self.poly([(x1, y1), (x2, y2)], **kwargs)
@@ -42,15 +70,28 @@ class Canvas:
     def rect(self, x, y, w, h, **kwargs):
         self.poly([(x, y), (x + w, y), (x + w, y + h), (x, y + h)], close=True, **kwargs)
 
-    def circle(self, x, y, radius, **kwargs):
-        self.poly([(x + radius * math.cos(i * math.tau / 64),
-                    y + radius * math.sin(i * math.tau / 64)) for i in range(64)], close=True, **kwargs)
+    def circle(self, x, y, radius, stroke="#30332f", width=.18, fill=None, dash=None, tag=""):
+        (x, y), = points_2d([(x, y)])
+        if not math.isfinite(radius) or radius <= 0:
+            raise ValueError("Circle radius must be positive and finite")
+        self.items.append(dict(kind="circle", x=x, y=y, radius=radius, stroke=css_color(stroke),
+                               width=paper_width(width), fill=css_color(fill), dash=dash_pattern(dash), tag=tag))
 
-    def text(self, x, y, text, size=3.0, color="#30332f", align="left", bold=False, tag="", rotation=0):
-        if not math.isfinite(rotation):
-            raise ValueError("Text rotation must be finite")
+    def text(self, x, y, text, size=3.0, color="#30332f", align="left", bold=False, tag="", rotation=0,
+             *, valign="baseline", size_mode="em"):
+        (x, y), = points_2d([(x, y)])
+        if not math.isfinite(rotation) or not math.isfinite(size) or size <= 0:
+            raise ValueError("Text rotation must be finite and size positive")
+        if align not in {"left", "center", "right"} or valign not in {"baseline", "middle"}:
+            raise ValueError("Text align: left/center/right; valign: baseline/middle")
+        if size_mode not in {"em", "cap"} or (size_mode == "cap" and not self.custom_font):
+            raise ValueError("Cap-height sizing requires an explicit Canvas font")
+        color = css_color(color)
+        if color is None:
+            raise ValueError("Text requires a color")
         self.items.append(dict(kind="text", x=x, y=y, text=str(text), size=size, color=color,
-                               align=align, bold=bold, tag=tag, rotation=rotation))
+                               align=align, bold=bold, tag=tag, rotation=rotation, valign=valign,
+                               size_mode=size_mode))
 
     def image(self, path, x, y, w, h):
         self.items.append(dict(kind="image", path=str(Path(path).resolve()), x=x, y=y, w=w, h=h))
@@ -121,32 +162,72 @@ class Canvas:
         path_batch = None
         for item in self.items:
             k = item["kind"]
-            if k != "poly" and path_batch is not None:
+            if k not in {"poly", "circle"} and path_batch is not None:
                 path_batch.commit()
                 path_batch = None
-            if k == "poly":
-                points = item["points"]
-                if len(points) < 2:
+            if k in {"poly", "circle"}:
+                if item["stroke"] is None and item["fill"] is None:
                     continue
+                if k == "poly":
+                    points = item["points"]
+                    if len(points) < 2:
+                        continue
+                else:
+                    x, y, radius = item["x"], item["y"], item["radius"]
+                    points = [(x-radius, y-radius), (x+radius, y+radius)]
                 if any(x < -.1 or x > self.width + .1 or y < -.1 or y > self.height + .1 for x, y in points):
                     geometry_overflow.append({"bounds_mm": [min(p[0] for p in points), min(p[1] for p in points), max(p[0] for p in points), max(p[1] for p in points)]})
                 if path_batch is None:
                     path_batch = page.new_shape()
                 sh = path_batch
-                sh.draw_polyline([fitz.Point(x * PT, y * PT) for x, y in points])
+                if k == "circle":
+                    # Same +X start and model-CCW direction as a native CAD circle.
+                    sh.draw_sector(fitz.Point(x * PT, y * PT),
+                                   fitz.Point((x + radius) * PT, y * PT), 360, fullSector=False)
+                else:
+                    for ring in [points, *item["holes"]]:
+                        path = list(ring)
+                        if item["close"] and path[-1] != path[0]:
+                            path.append(path[0])
+                        sh.draw_polyline([fitz.Point(x * PT, y * PT) for x, y in path])
                 dashes = None if not item["dash"] else "[" + " ".join(str(v * PT) for v in item["dash"]) + "] 0"
+                pdf_width = item["width"] * PT
+                if pdf_width == 0 and item["stroke"] is not None:
+                    # PyMuPDF finish(width=0) removes the stroke color instead of
+                    # writing a PDF hairline. Set 0 w within this path's saved state;
+                    # width=1 leaves that operator intact while retaining color.
+                    sh.draw_cont = "0 w\n" + sh.draw_cont
+                    pdf_width = 1
                 sh.finish(color=rgb(item["stroke"]), fill=rgb(item["fill"]),
-                          width=item["width"] * PT, closePath=item["close"], dashes=dashes)
-                tag = "polygon" if item["close"] else "polyline"
+                          width=pdf_width, closePath=False, dashes=dashes, even_odd=True,
+                          lineJoin=1)
                 dash_attr = '' if not item["dash"] else f' stroke-dasharray="{",".join(map(str, item["dash"]))}"'
-                svg.append(f'<{tag} points="' + " ".join(f"{x:.5f},{y:.5f}" for x, y in points)
-                           + f'" fill="{item["fill"] or "none"}" stroke="{item["stroke"] or "none"}" '
-                             f'stroke-width="{item["width"]}" stroke-linejoin="round"{dash_attr}/>')
+                # SVG has no device hairline: use one non-scaling pixel for width=0.
+                width_attr = (f'stroke-width="{item["width"]}"' if item["width"] else
+                              'stroke-width="1" vector-effect="non-scaling-stroke"')
+                attrs = (f' fill="{item["fill"] or "none"}" stroke="{item["stroke"] or "none"}" '
+                         f'{width_attr} stroke-linejoin="round"{dash_attr}')
+                if k == "circle":
+                    svg.append(f'<circle cx="{x}" cy="{y}" r="{radius}" '
+                               f'transform="translate(0 {2*y}) scale(1 -1)"{attrs}/>')
+                elif item["holes"]:
+                    paths = []
+                    for ring in [points, *item["holes"]]:
+                        paths.append("M " + " L ".join(f"{x:.8g},{y:.8g}" for x, y in ring) + " Z")
+                    svg.append(f'<path d="{" ".join(paths)}" fill-rule="evenodd"{attrs}/>')
+                else:
+                    tag = "polygon" if item["close"] else "polyline"
+                    svg.append(f'<{tag} points="' + " ".join(f"{x:.8g},{y:.8g}" for x, y in points)
+                               + f'"{attrs}/>')
             elif k == "text":
                 text = item["text"]
                 cjk = self.custom_font or any(ord(c) > 255 for c in text)
                 font = cjk_font if cjk else bold_font if item["bold"] else regular_font
                 fontname = "FangSong" if cjk else "EZBold" if item["bold"] else "EZLatin"
+                size = item["size"]
+                cap, baseline = _cap_metrics(str(font_path)) if item["size_mode"] == "cap" else (1, 0)
+                if item["size_mode"] == "cap":
+                    size /= cap
                 runs = []
                 for char in text:
                     if font.has_glyph(ord(char)):
@@ -159,27 +240,36 @@ class Canvas:
                         runs[-1][2] += char
                     else:
                         runs.append([run_name, run_font, char])
-                length = sum(f.text_length(t, fontsize=item["size"]) for _, f, t in runs)
+                length = sum(f.text_length(t, fontsize=size) for _, f, t in runs)
                 angle = math.radians(item["rotation"])
+                # Offset from the stated anchor in the rotated local down direction.
+                dy = baseline * size
+                if item["valign"] == "middle":
+                    dy += item["size"] / 2
+                anchor_x = item["x"] + dy * math.sin(angle)
+                anchor_y = item["y"] + dy * math.cos(angle)
                 offset = length / 2 if item["align"] == "center" else length if item["align"] == "right" else 0
-                x, y = item["x"] - offset * math.cos(angle), item["y"] + offset * math.sin(angle)
-                corners = [(x + u * math.cos(angle) + v * math.sin(angle), y - u * math.sin(angle) + v * math.cos(angle)) for u in (0, length) for v in (-item["size"], 0)]
+                x, y = anchor_x - offset * math.cos(angle), anchor_y + offset * math.sin(angle)
+                top = max(f.ascender for _, f, _ in runs) * size if runs else size
+                bottom = -min(f.descender for _, f, _ in runs) * size if runs else 0
+                corners = [(x + u * math.cos(angle) + v * math.sin(angle), y - u * math.sin(angle) + v * math.cos(angle)) for u in (0, length) for v in (-top, bottom)]
                 bounds = [min(p[0] for p in corners), min(p[1] for p in corners), max(p[0] for p in corners), max(p[1] for p in corners)]
                 if bounds[0] < -.1 or bounds[2] > self.width + .1 or bounds[3] > self.height + .1 or bounds[1] < -.1:
                     overflow.append({"text": text, "box_mm": bounds})
                 advance = 0
                 for run_name, run_font, run_text in runs:
                     page.insert_text(((x + advance * math.cos(angle)) * PT, (y - advance * math.sin(angle)) * PT),
-                                     run_text, fontsize=item["size"] * PT, fontname=run_name,
+                                     run_text, fontsize=size * PT, fontname=run_name,
                                      color=rgb(item["color"]),
                                      morph=(fitz.Point((x + advance * math.cos(angle)) * PT,
                                                       (y - advance * math.sin(angle)) * PT),
                                             fitz.Matrix(item["rotation"])))
-                    advance += run_font.text_length(run_text, fontsize=item["size"])
+                    advance += run_font.text_length(run_text, fontsize=size)
                 anchor = {"left": "start", "center": "middle", "right": "end"}[item["align"]]
                 family = "FandolFang, Helvetica, Arial, serif" if cjk else "Helvetica, Arial, sans-serif"
-                svg.append(f'<text x="{item["x"]}" y="{item["y"]}" transform="rotate({-item["rotation"]} {item["x"]} {item["y"]})" font-size="{item["size"]}" '
+                svg.append(f'<text x="{anchor_x}" y="{anchor_y}" transform="rotate({-item["rotation"]} {anchor_x} {anchor_y})" font-size="{size}" '
                            f'font-family="{family}" font-weight="{"bold" if item["bold"] else "normal"}" '
+                           f'font-kerning="none" font-variant-ligatures="none" '
                            f'text-anchor="{anchor}" fill="{item["color"]}">{html.escape(text)}</text>')
             elif k in ("image", "pdf"):
                 rect = fitz.Rect(item["x"] * PT, item["y"] * PT,

@@ -6,6 +6,7 @@ a documented drawing convention, not code approval.
 """
 from __future__ import annotations
 
+import hashlib
 import math
 from functools import wraps
 from pathlib import Path
@@ -13,7 +14,9 @@ from pathlib import Path
 import ezdxf
 import yaml
 from ezdxf.enums import TextEntityAlignment
+from ezdxf.lldxf.const import VALID_DXF_LINEWEIGHTS
 
+from ._drawing import css_color, dash_pattern, paper_width, points_2d, polygon_rings
 from .frames import paper_transform, transform_points
 from .project import skill_root, write_json
 
@@ -44,21 +47,22 @@ class Drawing:
         self.pens = {**DEFAULT_STYLE["pens_mm"], **(style or {}).get("pens_mm", {})}
         self.width = (bounds[2] - bounds[0]) / scale + margin * 2
         self.height = (bounds[3] - bounds[1]) / scale + margin * 2
-        self.canvas = Canvas(self.width, self.height, font=font)
+        self._bundled_font = font is None
+        self.canvas = Canvas(self.width, self.height,
+                             font=font or skill_root() / "assets/fonts/EZarchFang.ttf")
         self.doc = ezdxf.new("R2010")
         self.doc.units = ezdxf.units.MM
         self.doc.header["$MEASUREMENT"] = 1
         self.doc.styles.new("EZARCH", dxfattribs={"font": self.canvas.font_path.name})
-        self.doc.linetypes.new("EZ-GRID", dxfattribs={"description": "Axis centre line",
-                               "pattern": [16 * scale, 10 * scale, -2 * scale, 2 * scale, -2 * scale]})
         for name, pen in self.pens.items():
-            self.doc.layers.new(name, dxfattribs={"color": 7, "lineweight": round(pen * 100)})
+            self.doc.layers.new(name, dxfattribs={"color": 7, "true_color": int(INK[1:], 16),
+                                                "lineweight": self._lineweight(pen)})
         self.ms = self.doc.modelspace()
         self.dimensions, self.symbols = [], []
         self.entities = []
         self._bound, self._unit_mm = False, 1.0
         self._layer_names = {name: name for name in self.pens}
-        self._grid_name, self.text_style, self.dimstyle = "EZ-GRID", "EZARCH", "EZDXF"
+        self.text_style, self.dimstyle = "EZARCH", "EZDXF"
         self._paper_matrix = paper_transform(bounds, scale, margin=margin)
 
     @classmethod
@@ -93,7 +97,7 @@ class Drawing:
         self.pens = {**DEFAULT_STYLE["pens_mm"], **(style or {}).get("pens_mm", {})}
         self.text_style, self.dimstyle = text_style, dimstyle
         self.resource_policy, self._bound = resource_policy, True
-        self._layer_names, self._grid_name = {}, None
+        self._layer_names = {}
         self.entities, self.dimensions, self.symbols = [], [], []
         return self
 
@@ -106,25 +110,96 @@ class Drawing:
         return f"{name}-EZARCH-{index}"
 
     def _layer(self, role):
-        if not self._bound:
-            return role
         if role not in self._layer_names:
-            name = self._resource_name(self.doc.layers, role)
+            name = self._resource_name(self.doc.layers, role) if self._bound else role
             if name not in self.doc.layers:
                 self.doc.layers.new(name, dxfattribs={
-                    "color": 7, "lineweight": round(self.pens.get(role, .18) * 100)})
+                    "color": 7, "lineweight": self._lineweight(self.pens.get(role, .18)),
+                    **({"true_color": int(INK[1:], 16)} if not self._bound else {})})
             self._layer_names[role] = name
         return self._layer_names[role]
 
-    def _grid(self):
-        if self._grid_name is None:
-            name = self._resource_name(self.doc.linetypes, "EZ-GRID")
-            if name not in self.doc.linetypes:
-                s = self.scale
-                self.doc.linetypes.new(name, dxfattribs={"description": "Axis centre line",
-                    "pattern": [16*s, 10*s, -2*s, 2*s, -2*s]})
-            self._grid_name = name
-        return self._grid_name
+    def _existing_layer(self, role):
+        name = self._layer_names.get(role)
+        if name is None and (not self._bound or self.resource_policy == "reuse"):
+            name = role
+        return self.doc.layers.get(name) if name and name in self.doc.layers else None
+
+    @staticmethod
+    def _lineweight(width):
+        width = paper_width(width)
+        weight = round(width * 100)
+        if weight not in VALID_DXF_LINEWEIGHTS or not math.isclose(width * 100, weight, abs_tol=1e-8):
+            allowed = ", ".join(str(v / 100) for v in VALID_DXF_LINEWEIGHTS)
+            raise ValueError(f"DXF cannot represent width {width} mm exactly; select from {allowed}")
+        return weight
+
+    def _color(self, value, role):
+        if isinstance(value, str) and value == "BYLAYER":
+            layer = self._existing_layer(role)
+            if layer is not None and layer.rgb is not None:
+                color = "#" + "".join(f"{v:02x}" for v in layer.rgb)
+            elif layer is not None:
+                color = self._aci_color(abs(layer.dxf.color))
+            else:
+                color = "#000000" if self._bound else INK
+            return {"color": 256}, color
+        if isinstance(value, int) and not isinstance(value, bool):
+            return {"color": value}, self._aci_color(value)
+        color = css_color(value)
+        if color is None:
+            return {}, None
+        if self.doc.dxfversion < "AC1018":
+            raise ValueError("RGB colors require DXF R2004+; use an ACI index or BYLAYER for this document")
+        return {"true_color": int(color[1:], 16)}, color
+
+    @staticmethod
+    def _aci_color(value):
+        if not 1 <= value <= 255:
+            raise ValueError("ACI color must be in 1..255; use BYLAYER for inheritance")
+        # ACI 7 is foreground, resolved against this helper's white paper.
+        rgb = (0, 0, 0) if value == 7 else ezdxf.colors.aci2rgb(value)
+        return "#" + "".join(f"{v:02x}" for v in rgb)
+
+    def _stroke(self, color, width, dash, layer):
+        attrs, resolved = self._color(color, layer)
+        existing = self._existing_layer(layer)
+        if existing is None:
+            self._lineweight(self.pens.get(layer, .18))
+        if width is None:
+            weight = existing.dxf.lineweight if existing else self._lineweight(self.pens.get(layer, .18))
+            if weight < 0:
+                weight = self.doc.header.get("$LWDEFAULT", 25)
+            resolved_width = weight / 100
+        else:
+            attrs["lineweight"] = self._lineweight(width)
+            resolved_width = float(width)
+        pattern = dash_pattern(dash)
+        if pattern:
+            global_scale = self.doc.header.get("$LTSCALE", 1.0)
+            if not math.isfinite(global_scale) or global_scale <= 0:
+                raise ValueError("Positive finite source LTSCALE required for explicit dash lengths")
+            # Preserve the document setting; compensate only on the new entity.
+            attrs["ltscale"] = 1 / global_scale
+        return attrs, resolved, resolved_width, pattern
+
+    def _linetype(self, pattern):
+        if not pattern:
+            return "CONTINUOUS"
+        lengths = tuple(v * self.scale for v in pattern)
+        if not all(math.isfinite(v) and v > 0 for v in lengths):
+            raise ValueError("Dash lengths overflow target units")
+        name = "EZ-DASH-" + hashlib.sha256(repr(lengths).encode()).hexdigest()[:16]
+        candidate, index = name, 1
+        while candidate in self.doc.linetypes:
+            entry = self.doc.linetypes.get(candidate)
+            if not entry.pattern_tags.is_complex_type() and tuple(entry.simplified_line_pattern()) == lengths:
+                return candidate
+            candidate, index = f"{name}-{index}", index + 1
+        signed = [v if i % 2 == 0 else -v for i, v in enumerate(lengths)]
+        self.doc.linetypes.new(candidate, dxfattribs={"description": "Explicit dash/gap lengths",
+                                                    "pattern": [sum(lengths), *signed]})
+        return candidate
 
     def paper(self, p):
         if self._bound:
@@ -132,20 +207,38 @@ class Drawing:
         return list(transform_points([p], self._paper_matrix)[0])
 
     @_draw_entities
-    def poly(self, points, layer="A-VISIBLE", close=False, fill=None, color=INK, width=None, dash=None):
-        points = [list(p) for p in points]
+    def poly(self, points, layer="A-VISIBLE", close=False, fill=None, color="BYLAYER", width=None,
+             dash=None, *, holes=()):
+        attrs, stroke, pen, pattern = self._stroke(color, width, dash, layer)
+        fill_attrs, fill_color = self._color(fill, layer)
+        points, holes = polygon_rings(points, holes, close, fill_color)
         if len(points) < 2:
             return
+        if stroke is None and fill_color is None:
+            return
+        # Validate before creating any document resources or Canvas items.
+        linetype = self._linetype(pattern) if stroke is not None else "CONTINUOUS"
+        target_layer = self._layer(layer)
         if self.canvas is not None:
-            self.canvas.poly([self.paper(p) for p in points], close=close, fill=fill,
-                             stroke=color, width=width if width is not None else self.pens[layer], dash=dash)
-        attrs = {"layer": self._layer(layer)}
-        if dash:
-            attrs["linetype"] = self._grid()
-        self.entities.append(self.ms.add_lwpolyline(points, close=close, dxfattribs=attrs))
-        if fill and close:
-            hatch = self.ms.add_hatch(color=7, dxfattribs={"layer": self._layer(layer)})
-            hatch.paths.add_polyline_path(points, is_closed=True)
+            self.canvas.poly([self.paper(p) for p in points], close=close, fill=fill_color,
+                             stroke=stroke, width=pen, dash=pattern,
+                             holes=[[self.paper(p) for p in ring] for ring in holes])
+        hatch = None
+        if fill_color is not None:
+            hatch = self.ms.add_hatch(dxfattribs={"layer": target_layer, **fill_attrs})
+            # add_hatch's color argument overrides dxfattribs in ezdxf.
+            hatch.update_dxf_attribs(fill_attrs)
+            hatch.paths.add_polyline_path(points, is_closed=True, flags=1)
+            for ring in holes:
+                hatch.paths.add_polyline_path(ring, is_closed=True, flags=0)
+        if stroke is not None:
+            attrs.update(layer=target_layer, linetype=linetype)
+            # Generate a continuous pattern around vertices, like SVG/PDF.
+            for ring in [points, *holes]:
+                entity = self.ms.add_lwpolyline(ring, close=close, dxfattribs=attrs)
+                entity.dxf.flags |= 128
+                self.entities.append(entity)
+        if hatch is not None:
             self.entities.append(hatch)
 
     @_draw_entities
@@ -157,22 +250,36 @@ class Drawing:
         self.poly([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], close=True, **kw)
 
     @_draw_entities
-    def circle(self, centre, radius, layer="A-ANNOTATION", color=INK, width=None):
+    def circle(self, centre, radius, layer="A-ANNOTATION", color="BYLAYER", width=None, *, dash=None):
+        centre, = points_2d([centre])
+        if not math.isfinite(radius) or radius <= 0:
+            raise ValueError("Circle radius must be positive and finite")
+        attrs, stroke, pen, pattern = self._stroke(color, width, dash, layer)
+        if stroke is None:
+            return
+        attrs.update(linetype=self._linetype(pattern), layer=self._layer(layer))
         if self.canvas is not None:
             x, y = self.paper(centre)
-            self.canvas.circle(x, y, radius / self.scale, stroke=color, width=width or self.pens[layer])
-        self.entities.append(self.ms.add_circle(centre, radius, dxfattribs={"layer": self._layer(layer)}))
+            self.canvas.circle(x, y, radius / self.scale, stroke=stroke, width=pen, dash=pattern)
+        self.entities.append(self.ms.add_circle(centre, radius, dxfattribs=attrs))
 
     @_draw_entities
-    def text(self, point, text, size=2.5, align="center", color=INK, rotation=0, layer="A-ANNOTATION"):
+    def text(self, point, text, size=2.5, align="center", color="BYLAYER", rotation=0, layer="A-ANNOTATION"):
+        point, = points_2d([point])
+        if not math.isfinite(size) or size <= 0 or not math.isfinite(rotation):
+            raise ValueError("Text size must be positive and rotation finite")
+        if align not in {"left", "center", "right"}:
+            raise ValueError("Text align must be left, center or right")
+        attrs, resolved = self._color(color, layer)
+        if resolved is None:
+            raise ValueError("Text requires a color or BYLAYER")
         if self.canvas is not None:
-            x, y = self.paper(point)
-            self.canvas.text(x, y + (size * .32 if not rotation else 0), text, size=size,
-                             align=align, color=color, rotation=rotation)
+            self.canvas.text(*self.paper(point), text, size=size, align=align, color=resolved,
+                             rotation=rotation, valign="middle", size_mode="cap")
         alignment = {"left": TextEntityAlignment.MIDDLE_LEFT, "center": TextEntityAlignment.MIDDLE_CENTER,
                      "right": TextEntityAlignment.MIDDLE_RIGHT}[align]
         entity = self.ms.add_text(str(text), dxfattribs={"height": size * self.scale, "style": self.text_style,
-                         "layer": self._layer(layer), "rotation": rotation})
+                         "layer": self._layer(layer), "rotation": rotation, **attrs})
         entity.set_placement(point, align=alignment)
         self.entities.append(entity)
 
@@ -352,7 +459,7 @@ class Drawing:
         formats = set(["dxf", "svg", "pdf", "png"] if formats is None else formats)
         if not formats or formats - {"dxf", "svg", "pdf", "png"}:
             raise ValueError("Drawing formats: dxf, svg, pdf, png")
-        if "dxf" in formats and not self.canvas.custom_font:
+        if "dxf" in formats and self._bundled_font:
             font_dir = stem.parent / "fonts"
             font_dir.mkdir(parents=True, exist_ok=True)
             for filename in ["EZarchFang.ttf", "COPYING", "SOURCE.md"]:
