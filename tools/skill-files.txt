@@ -19,6 +19,7 @@ references/environment.md
 references/exchange-verification.md
 references/geometry-drawings.md
 references/geometry-diagnostics.md
+references/editable-components.md
 references/project-data.md
 references/public-assets.md
 references/rendering.md
@@ -40,6 +41,8 @@ src/ezarch/board.py
 src/ezarch/cli.py
 src/ezarch/diagrams.py
 src/ezarch/drafting.py
+src/ezarch/symbols.py
+src/ezarch/furniture.py
 src/ezarch/_drawing.py
 src/ezarch/environment.py
 src/ezarch/exchange.py

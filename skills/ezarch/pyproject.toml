@@ -32,6 +32,7 @@ sources = ["src"]
 dev-mode-dirs = ["src"]
 only-include = [
   "src/ezarch/_drawing.py",
+  "src/ezarch/symbols.py", "src/ezarch/furniture.py",
   "src/ezarch/walls.py", "src/ezarch/diagnostics.py",
   "src/ezarch/__init__.py", "src/ezarch/analysis.py", "src/ezarch/assets.py",
   "src/ezarch/audit.py", "src/ezarch/board.py", "src/ezarch/cli.py",
