@@ -13,6 +13,7 @@ import zipfile
 from pathlib import Path
 
 from .project import skill_root, write_json
+from .runtime import download, locations, lock
 
 BLENDER_VERSION = "4.5.11"
 BLENDER_RELEASE = "https://mirror.blender.org/release/Blender4.5/"
@@ -53,7 +54,9 @@ def install_font():
 
 def find_blender() -> str | None:
     candidates = [os.environ.get("EZARCH_BLENDER"), shutil.which("blender")]
-    cache = skill_root() / ".ezarch/tools"
+    cache = locations()["tools"]
+    candidates += [str(p) for p in (skill_root() / ".ezarch/tools").glob("**/blender.exe")]
+    candidates += [str(p) for p in (skill_root() / ".ezarch/tools").glob("**/Blender.app/Contents/MacOS/Blender")]
     candidates += [str(p) for p in cache.glob("**/blender.exe")]
     candidates += [str(p) for p in cache.glob("**/Blender.app/Contents/MacOS/Blender")]
     candidates += ["/Applications/Blender.app/Contents/MacOS/Blender",
@@ -67,14 +70,14 @@ def find_blender() -> str | None:
             continue
         try:
             first = subprocess.check_output([value, "--version"], text=True, timeout=20).splitlines()[0]
-            if first.startswith("Blender 4.5."):
+            if first.startswith("Blender ") and tuple(int(v) for v in first.split()[1].split(".")[:2]) >= (4, 5):
                 return value
-        except (OSError, subprocess.SubprocessError):
+        except (OSError, ValueError, subprocess.SubprocessError):
             continue
     return None
 
 
-def install_blender() -> str:
+def _install_blender() -> str:
     ensure_supported_platform()
     existing = find_blender()
     if existing:
@@ -83,18 +86,10 @@ def install_blender() -> str:
     if key not in BLENDER_FILES:
         raise RuntimeError(f"No tested Blender installation profile for {key}")
     filename, expected = BLENDER_FILES[key]
-    destination = skill_root() / ".ezarch/tools" / f"blender-{BLENDER_VERSION}"
+    destination = locations(create=True)["tools"] / f"blender-{BLENDER_VERSION}"
     destination.mkdir(parents=True, exist_ok=True)
     archive = destination / filename
-    if not archive.exists() or hashlib.sha256(archive.read_bytes()).hexdigest() != expected:
-        temporary = archive.with_suffix(archive.suffix + ".part")
-        request = urllib.request.Request(BLENDER_RELEASE + filename, headers={"User-Agent": "EZarch/0.1"})
-        with urllib.request.urlopen(request, timeout=120) as response, temporary.open("wb") as stream:
-            shutil.copyfileobj(response, stream)
-        if hashlib.sha256(temporary.read_bytes()).hexdigest() != expected:
-            temporary.unlink()
-            raise RuntimeError("Blender download SHA-256 mismatch")
-        temporary.replace(archive)
+    download(BLENDER_RELEASE + filename, archive, sha256=expected)
     if filename.endswith(".zip"):
         with zipfile.ZipFile(archive) as z:
             for member in z.infolist():
@@ -126,13 +121,15 @@ def doctor(out: Path | None = None):
             packages[name] = None
     result = {"system": platform.system(), "architecture": platform.machine(),
               "python": platform.python_version(), "blender": find_blender(), "packages": packages,
-              "oda_file_converter": find_oda(), "native_apps": "deferred", "ifc": "deferred"}
+              "oda_file_converter": find_oda(), "native_apps": "deferred", "ifc": "deferred",
+              "locations": {k: str(v) for k, v in locations().items()},
+              "operations": [probe_capability(name) for name in ("cad", "pdf", "geometry")]}
     if out:
         write_json(out, result)
     return result
 
 
-def install_oda():
+def _install_oda():
     """Fetch the optional proprietary converter from ODA, outside distributable files.
 
     macOS: copy the signed app into the private tool cache. Windows: administrative
@@ -155,13 +152,12 @@ def install_oda():
     if not match:
         raise RuntimeError(f'Official ODA download layout changed; inspect {page} for the appropriate installer')
     filename = match.group()
-    directory = skill_root() / '.ezarch/tools/oda'
+    directory = locations(create=True)['tools'] / 'oda'
     directory.mkdir(parents=True, exist_ok=True)
     archive = directory / Path(filename).name
     url = 'https://www.opendesign.com/guestfiles/get?filename=' + filename
     print(f'Downloading official ODA installer: {archive.name}', flush=True)
-    with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'EZarch'}), timeout=120) as response, archive.open('wb') as stream:
-        shutil.copyfileobj(response, stream)
+    download(url, archive)
     print(f'Downloaded {archive.stat().st_size} bytes; verifying and extracting', flush=True)
     if platform.system() == 'Darwin':
         result = subprocess.check_output(['hdiutil', 'attach', '-nobrowse', '-readonly', '-plist', str(archive)], timeout=180)
@@ -175,7 +171,7 @@ def install_oda():
                 raise RuntimeError('Unexpected ODA installer contents')
             subprocess.run(['codesign', '--verify', '--deep', '--strict', str(apps[0])], check=True, capture_output=True, timeout=120)
             print('ODA application signature verified; copying application', flush=True)
-            shutil.copytree(apps[0], directory / apps[0].name, symlinks=True)
+            shutil.copytree(apps[0], directory / apps[0].name, symlinks=True, dirs_exist_ok=True)
         finally:
             subprocess.run(['hdiutil', 'detach', mount], check=True, capture_output=True, timeout=60)
     else:
@@ -205,3 +201,31 @@ def install_oda():
     write_json(directory / 'download.json', {'official_page': page, 'installer': archive.name,
                                             'sha256': hashlib.sha256(archive.read_bytes()).hexdigest()})
     return executable
+
+
+def install_blender():
+    with lock(locations(create=True)["state"] / "blender-install.lock"):
+        return _install_blender()
+
+
+def install_oda():
+    with lock(locations(create=True)["state"] / "oda-install.lock"):
+        return _install_oda()
+
+
+def probe_capability(name):
+    """Actual small import/operation probe; no install and no full-disk scan."""
+    import sys
+    scripts = {
+        "cad": "import ezdxf; d=ezdxf.new(); d.modelspace().add_line((0,0),(1,1))",
+        "pdf": "import pymupdf; d=pymupdf.open(); d.new_page(); assert d.tobytes()",
+        "geometry": "from shapely.geometry import box; assert box(0,0,2,2).area == 4",
+        "model": "import trimesh,rhino3dm; assert trimesh.creation.box().vertices.shape[1] == 3",
+    }
+    if name not in scripts:
+        raise ValueError(f"Probe names: {list(scripts)}")
+    try:
+        call = subprocess.run([sys.executable, "-c", scripts[name]], capture_output=True, text=True, timeout=30)
+        return {"capability": name, "state": "ready" if call.returncode == 0 else "failed", "detail": call.stderr[-2000:]}
+    except (OSError, subprocess.TimeoutExpired) as error:
+        return {"capability": name, "state": "failed", "detail": str(error)}

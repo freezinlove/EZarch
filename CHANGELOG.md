@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add user-selected shared runtime locations, dependency reuse, isolated caches, capability probes and recoverable preparation. Keep old environments and make system font registration explicit.
+- Protect normal output entry points from accidental writes into tool code; provide opt-in staged/push Git boundary checks without changing existing hooks.
+
 - Reorganize the entry into a short capability index and focused operation references. Replace the general design-judgment expansion with concise visual guidance linked to actual drawings, model views and edits.
 - Remove `audit`, `review`, wall diagnostics, annotation-conflict and reachability modules, issue/coverage reporting, and `check_clearances`. Retain direct geometry measurements, input errors and native file validity handling. These removed APIs have no success-returning compatibility stubs.
 - Render new Drawing exports from current CAD entities by default, including native edits and placed components. CAD text remains editable in DXF; SVG/PDF views use outlines. Explicit `view_source="canvas"` retains recorded Canvas exports, including editable text; it does not track native CAD changes. Legacy project view generation retains this recorded mode.

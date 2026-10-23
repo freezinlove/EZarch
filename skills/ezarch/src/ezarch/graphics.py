@@ -141,6 +141,8 @@ class Canvas:
         formats = set(["svg", "pdf", "png"] if formats is None else formats)
         if formats - {"svg", "pdf", "png"}:
             raise ValueError("Canvas formats: svg, pdf, png")
+        from .storage import output_path
+        stem = output_path(stem)
         stem.parent.mkdir(parents=True, exist_ok=True)
         font_path = self.font_path
         if not font_path.exists():

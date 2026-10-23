@@ -136,7 +136,8 @@ def svg_inventory(source):
 
 
 def inspect(source, out, preview=False, scale=None, layout_name='Model', region=None, handles=None):
-    source, out = Path(source).resolve(), Path(out).resolve()
+    from .storage import output_path
+    source, out = Path(source).resolve(), output_path(out)
     out.mkdir(parents=True, exist_ok=True)
     suffix = source.suffix.lower()
     report = {'source': str(source), 'sha256': sha256(source), 'format': suffix[1:], 'objects': []}

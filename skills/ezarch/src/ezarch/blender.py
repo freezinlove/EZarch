@@ -19,15 +19,19 @@ def execute(script, out, *, source=None, save=None, arguments=(), timeout=1800):
     script, out = Path(script).resolve(), Path(out).resolve()
     if not script.is_file():
         raise FileNotFoundError(script)
+    from .storage import output_path
+    out = output_path(out)
     out.mkdir(parents=True, exist_ok=True)
     request = {'action': 'run', 'script': str(script), 'arguments': list(arguments),
                'source': str(Path(source).resolve()) if source else None,
-               'save': str(Path(save).resolve()) if save else None}
+               'save': str(output_path(save)) if save else None}
     return _worker(request, out, timeout)
 
 
 def _worker(request, out, timeout=1800):
     out = Path(out).resolve()
+    from .storage import output_path
+    out = output_path(out)
     out.mkdir(parents=True, exist_ok=True)
     request_path, report = out / 'blender-request.json', out / 'blender-result.json'
     write_json(request_path, request)

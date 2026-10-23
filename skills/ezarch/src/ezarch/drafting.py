@@ -501,6 +501,8 @@ class Drawing:
         if self._bound:
             raise ValueError("Bound Drawing does not export: save the full document with doc.saveas()")
         stem = Path(stem)
+        from .storage import output_path
+        stem = output_path(stem)
         stem.parent.mkdir(parents=True, exist_ok=True)
         if view_source not in {"native", "canvas"}:
             raise ValueError("view_source: native or canvas")

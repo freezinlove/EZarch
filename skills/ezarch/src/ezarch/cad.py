@@ -25,7 +25,8 @@ def check_source(source, expected=None):
 
 
 def destination(source, target):
-    source, target = Path(source).resolve(), Path(target).resolve()
+    from .storage import output_path
+    source, target = Path(source).resolve(), output_path(target)
     if source == target:
         raise ValueError('Choose a separate output file; this helper preserves the source')
     if target.exists():
@@ -36,9 +37,11 @@ def destination(source, target):
 
 def find_oda():
     from .project import skill_root
-    cache = skill_root() / '.ezarch/tools/oda'
+    from .runtime import locations
+    cache = locations()['tools'] / 'oda'
     candidates = [os.environ.get('EZARCH_ODA'), shutil.which('ODAFileConverter'),
-                  cache / 'ODAFileConverter.app/Contents/MacOS/ODAFileConverter']
+                  cache / 'ODAFileConverter.app/Contents/MacOS/ODAFileConverter',
+                  skill_root() / '.ezarch/tools/oda/ODAFileConverter.app/Contents/MacOS/ODAFileConverter']
     for candidate in candidates:
         if candidate and Path(candidate).is_file():
             return str(Path(candidate).resolve())
@@ -251,7 +254,9 @@ def plot(doc, output, scale=None, layout_name='Model', handles=None, region=None
     import re
 
     import pymupdf as fitz
-    output = Path(output)
+
+    from .storage import output_path
+    output = output_path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     formats = {'pdf', 'png'} if formats is None else set(formats)
     if not formats or formats - {'svg', 'pdf', 'png'}:

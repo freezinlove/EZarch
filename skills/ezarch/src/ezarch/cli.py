@@ -14,6 +14,9 @@ from .project import read_project, write_json
 
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "runtime":
+        from .runtime import main as runtime_main
+        return runtime_main(argv[1:])
     if argv and argv[0] == "blender":
         from .blender import main as blender_main
         return blender_main(argv[1:])
@@ -56,7 +59,8 @@ def main(argv=None):
         print(json.dumps(doctor(), ensure_ascii=False, indent=2))
         return 0
     args.input = args.input.expanduser().resolve()
-    args.out = args.out.expanduser().resolve()
+    from .storage import output_path
+    args.out = output_path(args.out)
     if not args.input.exists():
         parser.error(f"Input not found: {args.input}")
     args.out.mkdir(parents=True, exist_ok=True)
