@@ -81,3 +81,5 @@ references/coordinate-transforms.md
 src/ezarch/runtime.py
 src/ezarch/storage.py
 references/storage-updates.md
+src/ezarch/updates.py
+scripts/update.py

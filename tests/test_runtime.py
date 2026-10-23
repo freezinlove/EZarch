@@ -70,5 +70,6 @@ def test_shared_dependencies_distinct_code_and_failed_upgrade(isolated, monkeypa
     monkeypatch.setattr(runtime.subprocess, 'run', fail)
     with pytest.raises(OSError):
         runtime.prepare(first, uv='uv')
-    assert runtime.find_python(first) == Path(a['python'])
+    assert runtime.read_json(runtime.binding_file(first))['python'] == a['python']
+    assert runtime.find_python(first) is None  # changed dependencies require preparation
     assert Path(a['python']).exists()

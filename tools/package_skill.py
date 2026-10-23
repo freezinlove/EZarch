@@ -1,6 +1,7 @@
 """Package only declared release files, including from a GitHub source archive."""
 import argparse
 import hashlib
+import json
 import re
 import tempfile
 import tomllib
@@ -49,6 +50,7 @@ def package(skill: Path, manifest: Path, out: Path) -> tuple[Path, int, str]:
         raise ValueError("Invalid release version")
     out.mkdir(parents=True, exist_ok=True)
     archive = out / f"ezarch-{version}-skill.zip"
+    marker = {"version": version, "files": {name: hashlib.sha256(file.read_bytes()).hexdigest() for name, file in files}}
     with tempfile.NamedTemporaryFile(dir=out, suffix=".zip.tmp", delete=False) as stream:
         temporary = Path(stream.name)
     try:
@@ -60,20 +62,29 @@ def package(skill: Path, manifest: Path, out: Path) -> tuple[Path, int, str]:
                 info.external_attr = 0o100644 << 16
                 info.compress_type = zipfile.ZIP_DEFLATED
                 z.writestr(info, file.read_bytes())
+            info = zipfile.ZipInfo("ezarch/.ezarch-release.json", date_time=(1980, 1, 1, 0, 0, 0))
+            info.external_attr = 0o100644 << 16
+            z.writestr(info, json.dumps(marker, sort_keys=True).encode())
         digest = hashlib.sha256(temporary.read_bytes()).hexdigest()
         temporary.replace(archive)
     finally:
         temporary.unlink(missing_ok=True)
     archive.with_suffix(".zip.sha256").write_text(f"{digest}  {archive.name}\n", encoding="utf-8")
-    return archive, len(files), digest
+    return archive, len(files) + 1, digest
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--base-url", help="HTTPS directory serving the versioned release ZIP")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     archive, count, digest = package(root / "skills/ezarch", root / "tools/skill-files.txt", args.out)
+    if args.base_url:
+        if not args.base_url.startswith("https://"):
+            parser.error("Release base URL must use HTTPS")
+        version = tomllib.loads((root / "skills/ezarch/pyproject.toml").read_text())["project"]["version"]
+        (args.out / "ezarch-release.json").write_text(json.dumps({"version": version, "url": args.base_url.rstrip("/") + "/" + archive.name, "sha256": digest}, indent=2))
     print(f"{archive}: {count} files, SHA256 {digest}")
 
 

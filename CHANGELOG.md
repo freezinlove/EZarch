@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add release manifests, cached nonblocking update notices, optional background preparation, explicit safe activation/reload, local-change protection, rollback and interrupted-transaction recovery. Add tagged release packaging workflow.
+
 - Add user-selected shared runtime locations, dependency reuse, isolated caches, capability probes and recoverable preparation. Keep old environments and make system font registration explicit.
 - Protect normal output entry points from accidental writes into tool code; provide opt-in staged/push Git boundary checks without changing existing hooks.
 

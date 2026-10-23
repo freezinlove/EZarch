@@ -130,6 +130,8 @@ def binding_file(skill, home=None):
 def find_python(skill, home=None):
     record = read_json(binding_file(skill, home), {})
     selected = Path(record["python"]) if record.get("python") else None
+    if record.get("lock_sha256") and record["lock_sha256"] != hashlib.sha256((Path(skill) / "uv.lock").read_bytes()).hexdigest():
+        return None
     if selected and selected.is_file():
         return selected
     legacy = python_at(Path(skill) / ".venv")
@@ -164,7 +166,8 @@ def prepare(skill, *, extras=(), home=None, uv=None):
             subprocess.run([str(python), "-c", "import ezdxf,pymupdf,shapely,yaml; d=ezdxf.new(); d.modelspace().add_line((0,0),(1,1))"],
                            check=True, timeout=30)
             atomic_json(ready, {"python": str(python), "extras": sorted(extras), "key": key})
-            record = {"python": str(python), "extras": sorted(extras), "key": key, "reused": reused}
+            record = {"python": str(python), "extras": sorted(extras), "key": key, "reused": reused,
+                      "lock_sha256": hashlib.sha256((skill / "uv.lock").read_bytes()).hexdigest()}
             atomic_json(binding_file(skill, home), record)
             return record
         except Exception as error:

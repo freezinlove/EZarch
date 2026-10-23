@@ -30,9 +30,9 @@ def test_package_ignores_unlisted_files_and_does_not_need_git(release_tree, tmp_
         path.write_text("SYNTHETIC_PRIVATE_SENTINEL", encoding="utf-8")
     archive, count, digest = package(skill, manifest, tmp_path / "dist")
     with zipfile.ZipFile(archive) as z:
-        assert set(z.namelist()) == {"ezarch/pyproject.toml", "ezarch/SKILL.md"}
+        assert set(z.namelist()) == {"ezarch/pyproject.toml", "ezarch/SKILL.md", "ezarch/.ezarch-release.json"}
         assert all(b"SYNTHETIC_PRIVATE_SENTINEL" not in z.read(name) for name in z.namelist())
-    assert count == 2
+    assert count == 3
     assert archive.with_suffix(".zip.sha256").read_text(encoding="utf-8").startswith(digest)
     os.utime(skill / "SKILL.md", (1700000000, 1700000000))
     assert package(skill, manifest, tmp_path / "again")[2] == digest

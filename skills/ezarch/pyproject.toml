@@ -31,7 +31,7 @@ ezarch = "ezarch.cli:main"
 sources = ["src"]
 dev-mode-dirs = ["src"]
 only-include = [
-  "src/ezarch/runtime.py", "src/ezarch/storage.py",
+  "src/ezarch/runtime.py", "src/ezarch/updates.py", "src/ezarch/storage.py",
   "src/ezarch/_drawing.py",
   "src/ezarch/symbols.py", "src/ezarch/furniture.py",
   "src/ezarch/wall_regions.py", "src/ezarch/vertical_symbols.py",

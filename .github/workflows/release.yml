@@ -1,0 +1,26 @@
+name: Package tagged skill release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Match tag and declared version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python -c 'import os,tomllib; from pathlib import Path; v=tomllib.loads(Path("skills/ezarch/pyproject.toml").read_text())["project"]["version"]; assert os.environ["RELEASE_TAG"] == "v"+v'
+      - name: Package
+        env:
+          RELEASE_BASE: https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}
+        run: python tools/package_skill.py --out dist --base-url "$RELEASE_BASE"
+      - name: Create release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes
