@@ -6,30 +6,22 @@ from .project import Project, fingerprint, write_json
 
 def brief(project: Project, out: Path):
     from shapely.geometry import Polygon
+
     from .measurements import measure_area
-    areas, polygons = [], []
+    areas = []
     for room in project.rooms:
         polygon = Polygon(room["polygon"])
         if not polygon.is_valid:
             raise ValueError(f"Invalid room boundary: {room.get('id')}")
-        polygons.append(polygon)
         measured = measure_area(polygon, unit_mm=1)
         areas.append({"id": room.get("id"), "name": room.get("name"),
                       "area_m2": round(measured["area_m2"], 3),
                       "basis": "Supplied room polygon; no additional deductions", "unit_mm": 1,
                       "type": room.get("type", "interior"), "level": room.get("level")})
-    overlaps = []
-    for i, left in enumerate(polygons):
-        for j in range(i + 1, len(polygons)):
-            if areas[i]["level"] != areas[j]["level"]:
-                continue
-            overlap = left.intersection(polygons[j]).area
-            if overlap > 1:
-                overlaps.append({"rooms": [areas[i]["id"], areas[j]["id"]], "area_m2": overlap / 1e6})
     report = {"project": project.name, "project_hash": fingerprint(project), "rooms": areas,
               "interior_net_area_m2": sum(a["area_m2"] for a in areas if a["type"] == "interior"),
               "courtyard_area_m2": sum(a["area_m2"] for a in areas if a["type"] == "courtyard"),
-              "overlaps": overlaps, "brief": project.brief, "sources": project.sources}
+              "brief": project.brief, "sources": project.sources}
     report["interior_boundary_area_m2"] = report["interior_net_area_m2"]
     report["compatibility_fields"] = {
         "interior_net_area_m2": "Legacy alias for interior_boundary_area_m2; no net-area deductions implied"}
@@ -43,8 +35,6 @@ def brief(project: Project, out: Path):
     lines += ["", f"Sum of interior boundary areas: {report['interior_boundary_area_m2']:.2f} m².",
               "Areas derive from supplied polygons without additional deductions; not certified net or gross area.", ""]
     (out / "brief.md").write_text("\n".join(lines), encoding="utf-8")
-    if overlaps:
-        raise ValueError("Room polygons overlap; inspect brief.json before proceeding")
     return report
 
 

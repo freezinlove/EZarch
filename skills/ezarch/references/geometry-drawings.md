@@ -1,8 +1,7 @@
 # 几何与二维技术图纸
 
-随库提供 [Blender 原生建模](blender-modeling.md) 操作知识与助手，二维 CAD 可直接使用 ezdxf，图解和排版可用 SVG/PDF。模块独立；是否从二维建模、从模型出图或共享参数，由任务决定。
+二维 CAD 使用 ezdxf / Drawing，矢量排版使用 SVG / Canvas；模型剖切可接入 [Blender](blender-modeling.md)。
 
-所选二维区域/路径的有效性、短边、回折及精确重复可用独立的 [几何观测与定位](geometry-diagnostics.md)。结果包含实际范围和未检查内容，诊断不修改源图，也不代替设计判断。
 
 ## 独立二维
 
@@ -10,7 +9,7 @@
 
 所选路径或边界生成墙面、区域合并与显式开洞见 [墙面与洞口](wall-regions.md)；梯段、折断线、方向标记及电梯局部几何见 [楼梯与电梯资源](vertical-components.md)。这些入口彼此独立，不要求按某个顺序调用。
 
-`ezarch.drafting.Drawing(bounds, scale=100, title="", number="", margin=12, *, style=None, font=None)` 新建文档，可输出 DXF/PDF/SVG/PNG。bounds、物体坐标以模型 mm 输入；scale 为比例分母，文字和笔宽用纸面 mm。方法包括 poly、text、axis、dimension、chain、level、north、section_mark、index、leader、furniture；签名见 [drafting.py](../src/ezarch/drafting.py)。默认不添加图框或比例尺。样式、字体和组合由任务决定。
+`ezarch.drafting.Drawing(bounds, scale=100, title="", number="", margin=12, *, style=None, font=None)` 新建文档，可输出 DXF/PDF/SVG/PNG。bounds、物体坐标以模型 mm 输入；scale 为比例分母，文字和笔宽用纸面 mm。方法包括 poly、text、axis、dimension、chain、level、north、section_mark、index、leader、symbol；签名见 [drafting.py](../src/ezarch/drafting.py)。默认不添加图框或比例尺。样式、字体和组合由任务决定。
 
 轴线、轴号、引折线与柱截面可按需取用 [独立资源](grids-columns.md)，既有 `Drawing.axis` 的行为保留。带文字/形状的复杂线型、块、斜向/径向尺寸等可直接用 ezdxf；修改已有 CAD 可保留原图层、块、布局和样式。见 [中国制图](chinese-drafting.md) 与 [连续修改](edit-existing.md)。
 
@@ -21,16 +20,22 @@
 | 参数或能力 | 含义与支持边界 |
 |---|---|
 | `color`，`poly(..., fill=...)` | 可用 `#RRGGBB`、0..1 的 RGB 三元组、ACI 整数 1..255 或 `"BYLAYER"`。描边/文字默认继承图层；新建文档的默认图层保留原助手墨色，绑定模式保留所选源图层。`color=None` 不生成轮廓，`fill=None` 不填充；文字仍需颜色。RGB 写入真彩色，要求 R2004+；R2000 可用 ACI/图层继承，不静默近似或升级文件。ACI 7 在白色纸面按黑色解释。 |
-| `width` | 纸面 mm；省略时继承图层线宽，显式值写入新增实体，不改图层。DXF 线宽有有限档位，不能准确保存的数值会报错并列出支持值，调用者可自行选择近似值；独立 Canvas 可用任意非负有限线宽。0 表示设备细线，PDF/DXF 保留 0，SVG 使用一个不随缩放变化的像素，不能用于精确物理线宽比较。 |
+| `width` | 纸面 mm；省略时继承图层线宽，显式值写入新增实体，不改图层。DXF 线宽有有限档位，不能准确保存的数值会报错并列出支持值，调用者可自行选择近似值；独立 Canvas 可用任意非负有限线宽。0 表示设备细线，DXF 保留 0；原生预览前端有最小可见线宽。Canvas 模式的 PDF 保留 0，SVG 使用不随缩放变化的像素，不宜用于精确物理线宽比较。 |
 | `dash` | 以纸面 mm 交替给出正的线段/间隔长度；空值为实线，奇数长度数组重复成偶数。按目标单位换算并复用相同线型定义；同名但不同定义另取名称，明确指定的数组不会被原有轴线线型替代。新实体补偿当前 `$LTSCALE`，不改文档全局设置。之后改变全局比例、块 INSERT 缩放、纸空间视口线型设置或打印样式，仍会影响 CAD 显示。 |
 | `poly(..., close=True, holes=...)` | points 为外环，holes 为内环集合；可单独控制轮廓和填充。返回外环、内环的原生多段线和 HATCH；无轮廓时仅 HATCH。CAD 中先画填充再画边界；返回元组仍先列边界、最后填充。SVG/PDF 使用真实多环填充，孔洞透出下方内容。自交、孔洞越界或重叠等无效区域报错，不自动修复几何。此接口接受直边二维环，曲线边界可用原生 HATCH。 |
-| `text(..., size, align, rotation)` | size 为纸面大写字高，位置为该高度中线上的左/中/右锚点；rotation 为模型 Y 向上坐标中的逆时针角度。新建 Drawing 的 CAD 与 Canvas 使用同一所选字体，Canvas 按字体度量换算字号，并围绕同一锚点旋转；文字保留可编辑性。绑定模式使用已有文字样式。 |
+| `text(..., size, align, rotation)` | size 为纸面大写字高，位置为该高度中线上的左/中/右锚点；rotation 为模型 Y 向上坐标中的逆时针角度。新建 Drawing 的 CAD 与 Canvas 使用同一所选字体，Canvas 按字体度量换算字号，并围绕同一锚点旋转；CAD 中文字保留可编辑性。绑定模式使用已有文字样式。 |
 
-`circle` 在 CAD 保留原生圆，SVG 使用 circle，PDF 使用矢量圆曲线，支持颜色、线宽与 dash。轮廓与填充属性分别写入文件，未显式修改的原实体及资源保持不变。
+`circle` 在 CAD 保留原生圆，导出视图使用矢量路径，支持颜色、线宽与 dash。轮廓与填充属性分别写入文件，未显式修改的原实体及资源保持不变。
 
 多格式对应指上述参数在所选格式中按同一含义保存；不承诺不同查看器、替代字体、打印配置、细线和曲线近似得到逐像素相同图像。文字定位已覆盖随库字体下的旋转与三种对齐；任意外部字体、SHX 替代及复杂排版需要相应检查。字体选择与交付说明见 [字体支持](chinese-drafting.md)。原生 DIMENSION 等组合对象的全部排版参数不属于本次属性映射范围。
 
-新建 Drawing 同步记录的是绘制调用；后来直接修改返回的 CAD 实体、图层或样式，不会追溯修改已有 Canvas 内容。此时可从修改后的完整 CAD 原生渲染，或自行同步所需图形。绑定模式保持纯 CAD，不为新增内容建立虚假的整图预览。
+## 保存与继续修改
+
+`drawing.save(stem, formats={"dxf", "pdf", "svg", "png"})` 默认从当前 CAD 实体生成预览；原生修改、图层变化和组件放置均会进入下一次导出。bounds 定义固定源范围，scale 与 margin 确定纸幅。返回视图尺寸、实际格式与前端跳过的对象，不返回设计通过结论。
+
+CAD 的 TEXT、曲线、DIMENSION 等保留在 DXF 中；默认 SVG/PDF 中的 CAD 文字为轮廓路径。需要可编辑 SVG/PDF 文字时，可直接用 [Canvas.text](diagrams-boards.md)，或显式 `save(..., view_source="canvas")` 导出 Drawing 的旧绘制记录。后者只包含 Drawing 方法记录和直接加入 drawing.canvas 的内容，**不追踪原生实体编辑，也不包含 drawing.symbol 放置**；适用于有意维护这份独立画布的项目。两种来源不自动混合。
+
+已有 CAD 可用 `cad.plot` 出图；Canvas 的 `cad` 与 `symbol` 可把当前原生几何接入版面，见 [组件接入](editable-components.md#接入正在使用的画图方式)。视觉判断和局部视图入口见 [看图与修改](viewing-editing.md)。
 
 ## 绘制到已有文档
 

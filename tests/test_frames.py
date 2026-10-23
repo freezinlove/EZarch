@@ -1,16 +1,22 @@
 """Geometry invariants, independent of any project's layout or design choices."""
 import math
 import os
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
+from ezarch.frames import (
+    affine_determinant,
+    affine_from_axes,
+    inverse_affine,
+    paper_transform,
+    transform_direction,
+    transform_geometry,
+    transform_points,
+)
 from shapely.geometry import GeometryCollection, LineString, Point, Polygon
-
-from ezarch.frames import (affine_determinant, affine_from_axes, inverse_affine,
-                           paper_transform, transform_direction, transform_geometry, transform_points)
 
 
 @pytest.mark.parametrize("angle", [0, 31, 113, 247])

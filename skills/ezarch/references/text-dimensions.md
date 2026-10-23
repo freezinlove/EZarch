@@ -1,6 +1,6 @@
 # 尺寸端点与字体测量
 
-这里提供独立测量、原生尺寸和字体证据，不决定标注什么、放在哪里、采用什么字体或如何安排工作。可以只调用一项，或使用原生 CAD/字体/排版引擎。返回的范围和限制帮助 AI 判断，不替代设计判断或整图核验。
+端点测量、原生 CAD 尺寸、字体发现及文字包络计算。
 
 ## 端点与原生尺寸
 
@@ -32,21 +32,9 @@ advance_mm 是水平排列进宽，含空格；ink 是实际字形轮廓的合�
 
 首版采用 **未塑形的水平字形进宽/轮廓**，不应用字偶距、连字、双向排序或复杂文字塑形；可变字体使用默认轴值。它适用于对应排列方式下的占位计算，不是所有语言的最终排版器。需要塑形、富文本、多行或渲染器特定效果时，可用 HarfBuzz、浏览器或项目既有引擎；这些方法不受本助手支持范围限制。测量本身不检查其他对象，可按需要接入下面的独立占位计算。
 
-## 标注占位观测
+## 文字几何包络
 
-[`ezarch.annotations`](../src/ezarch/annotations.py) 提供只读包络关系，不安排标注布局，也不决定哪些叠放需要修改。
-
-`annotation_conflicts(annotations, obstacles=None, *, unit_mm, clearance_mm=0, expected_annotation_ids=None, expected_obstacle_ids=None)` 接收两组 ID 到二维 Shapely 几何的映射。只比较标注之间及标注与障碍之间，不检查障碍相互关系；两组同名 ID 保留组名区分。支持 Point/MultiPoint、直线/环/多线、Polygon/MultiPolygon。所选输入应已处在同一可比较坐标空间；模型/纸面比例、楼层、笔宽、门弧或圆的近似占位均不自动推断。
-
-可直接传几何，或用 `Footprint(geometry, basis, source=None, unavailable_reason=None, limitations=())` 附加计算口径、来源及不可用原因；这只是本次观测的可选包装。圆弧的离散精度、线宽外廓、留白包络或来自渲染器的文字范围，可由调用者构造；输入中心线就只量中心线关系。工具不自行加统一缓冲宽度。
-
-`text_footprint(measurement, *, kind, transform=None)` 适配上面的 measure_text 结果。kind 显式选 ink 或 metrics，用旋转四角保留方向；不把轴对齐 bbox 当成旋转文字的准确占位。默认坐标为字体测量的 mm，可用 [仿射变换](coordinate-transforms.md) 映射到所需坐标单位和方向，之后 annotation_conflicts 的 unit_mm 应对应该坐标。缺字、空字符串或无墨迹包络保留 unavailable_reason，无法比较的对象仍出现在结果中。字体方法限制和来源快照随 Footprint 返回。**ink 也只是字形合并包络，包络重叠不能证明真实墨迹遮挡。**
-
-findings 的 evidence 均为 candidate；relation 区分 intersects、touches、within_clearance。相交或边界接触总会记录；分离对象只在实际距离严格小于 clearance_mm 时记录，默认 0 不增加留白要求。返回分组对象 ID、实际交集、交叠面积 mm²、最近距离 mm，以及交集或最近点连线的定位。交集包含线时面积可以为零，不等于没有观测。可用 `issue_region(finding, padding=...)` 取得输入坐标的裁图范围；precision 为 supplied_footprint_relation，定位的是包络关系。
-
-结果分别记录 selected_pair_count / checked_pair_count、逐对象未检查原因、计算失败的对、预期缺失 ID、参数及 not_checked。coverage 的 complete/partial/none 只指所选比较的执行覆盖；observation 的 findings/none_found/not_assessed 只描述这次观测。零对象、单个标注且无障碍、全部输入不可用都不会得到“没有冲突”的成功结论。部分不可用与其余对象无发现可以同时出现。结果含 Shapely 对象，留在内存或按需转换几何，不要求生成报告。
-
-这项计算提取历史任务中的文字包络交集、最近距离及对象定位，去除了固定纸幅、字号、面积阈值和零冲突断言。输出不带整体评分，不移动/缩小/删除标注，不判断视觉优先级；合理叠放也可能命中。AI 可结合实际图面、用户意图和其他证据接受、补充或推翻候选判断。
+`ezarch.annotations.text_footprint(measurement, *, kind, transform=None)` 将 measure_text 结果的 ink 或 metrics 四角转换为 Shapely 多边形；`transform` 可映射到所需坐标系。返回 `Footprint.geometry`、basis、source、limitations 和 unavailable_reason；缺字或无包络时 geometry 为 None。包络重叠不等于实际字形遮挡，真实排版效果见导出图。
 
 ## 来源和验证范围
 

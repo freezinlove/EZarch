@@ -4,12 +4,11 @@ import math
 import ezdxf
 import pymupdf as fitz
 import pytest
-from fontTools.ttLib import TTCollection, TTFont
-
 from ezarch.drafting import Drawing
 from ezarch.fonts import FontFace, cap_metrics, discover_fonts, font_info, measure_text
 from ezarch.measurements import measure_span
 from ezarch.project import skill_root
+from fontTools.ttLib import TTCollection, TTFont
 
 FONT = skill_root()/"assets/fonts/EZarchFang.ttf"
 OTF = skill_root()/"assets/fonts/FandolFang-Regular.otf"
@@ -60,7 +59,7 @@ def test_endpoint_change_and_literal_override_are_distinguishable():
 def test_oblique_canvas_and_dxf_value_agree_after_save(tmp_path):
     d = Drawing((-4000, -4000, 10000, 9000), scale=100)
     dim, = d.dimension((0, 0), (3000, 4000), (0, -1200), decimals=1)
-    assert d.save(tmp_path/"oblique", formats=["pdf", "svg", "dxf"])
+    assert d.save(tmp_path/"oblique", view_source="canvas", formats=["pdf", "svg", "dxf"])
     with fitz.open(tmp_path/"oblique.pdf") as pdf:
         assert "5000.0" in pdf[0].get_text()
         line = pdf[0].get_text("dict")["blocks"][0]["lines"][0]

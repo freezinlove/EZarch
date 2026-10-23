@@ -1,6 +1,6 @@
 # 按需准备工具环境
 
-已有环境或现有脚本能够完成任务时，可以直接使用。纯 SVG 文本生成不需要安装 EZarch、CadQuery 或 Blender。下面是选择随库工具时的安装方法，不是每次任务的前置步骤。
+随库 Python 工具的安装与启动方法。已有兼容环境可以复用，纯 SVG 文本生成无需安装 EZarch 或 Blender。
 
 ## 随库环境
 
@@ -20,7 +20,7 @@ powershell -File "<skill>/scripts/bootstrap.ps1" -Profile core
 
 | 安装配置 | 实际准备的能力 |
 |---|---|
-| core | 参考读取、独立二维 Drawing、resvg 静态 SVG 预览、PDF、排版、分析与检查助手 |
+| core | 参考读取、独立二维 Drawing、resvg 静态 SVG 预览、PDF、几何计算与排版助手 |
 | model | core + Blender、网格与 Rhino/DAE 交换库 |
 | draft | core；独立二维无需三维内核 |
 | render | core + 检测或安装 Blender；不自动安装 CadQuery |

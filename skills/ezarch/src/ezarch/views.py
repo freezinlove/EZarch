@@ -401,7 +401,7 @@ def save_annotated_view(project: Project, data: dict, view: dict, stem: Path, fo
         if op in {"poly", "rect", "line", "circle"}:
             command.setdefault("layer", "A-ANNOTATION")
         getattr(drawing, op)(**command)
-    report = drawing.save(stem, metadata={"project_hash": fingerprint(project), "bounds_mm": bounds}, formats=formats)
+    report = drawing.save(stem, view_source="canvas", metadata={"project_hash": fingerprint(project), "bounds_mm": bounds}, formats=formats)
     write_json(stem.with_suffix(".geometry.json"), {**data, **report["metadata"], "scale_bar_segments": 4,
                                                   "scale_bar_height_mm": 1})
     return report

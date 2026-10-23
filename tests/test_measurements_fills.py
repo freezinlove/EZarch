@@ -4,15 +4,14 @@ import subprocess
 import sys
 
 import pytest
-from shapely.affinity import rotate, scale, translate
-from shapely.geometry import MultiPolygon, Polygon, box
-
 from ezarch.diagrams import fill_regions, generate_diagrams
 from ezarch.frames import paper_transform
 from ezarch.graphics import Canvas
 from ezarch.intake import brief
 from ezarch.measurements import coverage, measure_area
 from ezarch.project import Project
+from shapely.affinity import rotate, scale, translate
+from shapely.geometry import MultiPolygon, Polygon, box
 
 
 @pytest.mark.parametrize("unit_mm", [1, 10, 1000])

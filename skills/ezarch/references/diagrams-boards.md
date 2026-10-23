@@ -1,6 +1,8 @@
 # SVG、分析图与排版工具
 
-图形内容、风格、布局、字形、图量和叙事由用户需求、参考和模型判断决定。可直接生成或修改 SVG，沿用现有脚本/模板，或选用下面的工具。没有必须先写分析问题、建模型、套槽位再出图的步骤。
+原生 SVG、Canvas 和 PDF 合成可用于图解、分析图与版面，支持现有脚本和项目模板。
+
+Canvas 使用纸面 mm、X 向右/Y 向下；`Canvas.symbol(...)` 可直接放置随库组件，`Canvas.cad(...)` 可嵌入当前 CAD 并在保存时重新渲染。参数见 [组件接入](editable-components.md#接入正在使用的画图方式)。Canvas 自身的文字保持文字对象，嵌入 CAD 的文字为矢量轮廓。
 
 ## 直接 SVG
 
@@ -12,7 +14,7 @@ SVG 可承载地图、统计图、关系图、技术线稿和自由图板。数�
 
 已有任意二维边界时，可选用 [独立区域填色](area-regions.md#独立填色)，返回可编辑画布图元，不自动生成整套分析图。需要查找真实字体、确认缺字或测量字宽/轮廓时见 [字体测量](text-dimensions.md#字体发现与字形依据)；测量结果不会自动改动渲染字体或布局。
 
-`ezarch.graphics.Canvas(width_mm, height_mm, font=None)` 提供 poly/line/rect/circle/text/text_box/image/pdf/save，可直接从 Python 生成 SVG/PDF/PNG，不需要项目模型。API 见 `src/ezarch/graphics.py`。
+`ezarch.graphics.Canvas(width, height, background="#ffffff", font=None)` 提供 poly/line/rect/circle/text/text_box/image/pdf/cad/symbol/save，可直接从 Python 生成 SVG/PDF/PNG，不需要项目模型。API 见 `src/ezarch/graphics.py`。
 
 Canvas 支持任意角度文字；font 可指定项目字体文件，省略时使用随库仿宋和 Helvetica 系列。`save(stem, formats=["svg"])` 可仅输出所需格式。它不提供完整 SVG/CSS 能力；富文本、滤镜等可直接使用 SVG 或其他库。自定义字体的许可与交付依赖由所选字体决定。
 
@@ -24,9 +26,9 @@ Canvas 支持任意角度文字；font 可指定项目字体文件，省略时�
 
 `board <board.yml> --formats pdf --out <dir>` 接收独立模板，无需建模。适合 PDF/图片和简单文字、线框的纸面合成；可用用户现有版式或直接编写 SVG 代替。
 
-输入 `sheets` 列表；每项包含纸幅 `size_mm`、可选 background/font 和 items。每个 item 用 type 选择 text/line/rect/pdf/image，x/y/w/h 是纸面 mm，file 相对模板。文字支持 size/rotation；提供 w/h 时有界换行，否则逐行定位。媒体默认保持宽高比。`allow_overlap` 决定是否接受有意叠放，不是版式审美规则。模板由本次需求决定，工具不内置图量或槽位布局。
+输入 `sheets` 列表；每项包含纸幅 `size_mm`、可选 background/font 和 items。每个 item 用 type 选择 text/line/rect/pdf/image，x/y/w/h 是纸面 mm，file 相对模板。文字支持 size/rotation；提供 w/h 时有界换行，否则逐行定位。媒体默认保持宽高比。内容按 items 顺序叠放，允许重叠和页面裁切；旧 allow_overlap 字段不再参与判断。模板由本次需求决定，工具不内置图量或槽位布局。
 
-`scale_lock` 对 PDF 槽位要求物理比例不变；可不启用，但图纸标注的比例仍需与实际缩放一致。图片保持宽高比，minimum_ppi 根据放置尺寸检查有效像素。固定槽位算法不会自动决定优秀的版式。
+`scale_lock` 对 PDF 槽位要求物理比例不变；可不启用，但图纸标注的比例仍需与实际缩放一致。图片保持宽高比，返回实际有效 PPI；显式提供 minimum_ppi 才按该要求限制尺寸。固定槽位算法不会自动决定优秀的版式。
 
 formats 选择 SVG/PDF/PNG；选择 PDF 时同时生成合订 presentation.pdf，并附带布局报告。PDF 槽位在合成 PDF 中保持矢量，但转入 SVG 时文字会转曲。需要保留原 SVG 文字/图层时，可直接组合 SVG，不必经 PDF 槽位。PDF/X、CMYK 等是另行配置的印前能力，不包含在默认输出中。
 

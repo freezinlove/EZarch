@@ -23,20 +23,16 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog="ezarch", epilog="Native Blender: blender run/extract/export/view. File operations: inspect, query, compare, convert, edit (each supports --help)")
     sub = parser.add_subparsers(dest="module", required=True)
     sub.add_parser("doctor")
-    for name in ["brief", "reference", "asset", "model", "draft", "views", "diagram", "render", "board", "audit", "review", "exchange"]:
+    for name in ["brief", "reference", "asset", "model", "draft", "views", "diagram", "render", "board", "exchange"]:
         command = sub.add_parser(name)
         if name in ("model", "views", "draft"):
             command.description = "Legacy project.yml geometry helper; new 3D work uses blender run/extract/view."
-        if name == "review":
-            command.description = "Legacy evidence-record integrity check, retained for maintenance compatibility."
         command.add_argument("input", type=Path)
         command.add_argument("--out", type=Path, required=True)
         if name in ("draft", "views"):
             command.add_argument("--only", nargs="+")
         if name in ("model", "draft", "views", "board", "diagram"):
             command.add_argument("--formats", nargs="+")
-        if name == "audit":
-            command.add_argument("--outputs", type=Path, help="Outputs directory for optional project comparison")
         if name == "diagram":
             command.add_argument("--level")
             command.add_argument("--kinds", nargs="+", choices=["program", "circulation", "solid-void", "areas"])
@@ -104,12 +100,6 @@ def main(argv=None):
             else:
                 from .exchange import export_scene
                 result = export_scene(json.loads(args.input.read_text(encoding="utf-8")), args.out, args.formats)
-        elif args.module == "audit":
-            from .audit import audit
-            result = audit(args.input, args.out, args.outputs)
-        elif args.module == "review":
-            from .quality import review
-            result = review(args.input, args.out)
         elif args.module == "asset":
             import yaml
 

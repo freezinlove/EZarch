@@ -1,5 +1,6 @@
 """Standalone board composition from arbitrary PDF/images and a physical template."""
 import hashlib
+import math
 from pathlib import Path
 
 import pymupdf as fitz
@@ -29,14 +30,12 @@ def compose(template: Path, out: Path, formats=None):
             x, y = item["x"], item["y"]
             if kind == "text":
                 if "w" in item and "h" in item:
-                    if x < 0 or y < 0 or x + item["w"] > width or y + item["h"] > height:
-                        raise ValueError("Text box exceeds page")
                     info = canvas.text_box(x, y, item["w"], item["h"], item["text"],
                         size=item.get("size", 3), leading=item.get("leading"),
                         color=item.get("color", "#343930"), bold=item.get("bold", False),
                         rotation=item.get("rotation", 0))
                     text_boxes.append({"rect_mm": [x, y, item["w"], item["h"]],
-                                       "allow_overlap": item.get("allow_overlap", False), **info})
+                                       **info})
                     continue
                 lines = str(item["text"]).split("\n")
                 size = item.get("size", 3)
@@ -49,8 +48,8 @@ def compose(template: Path, out: Path, formats=None):
                 canvas.line(x, y, item["x2"], item["y2"], stroke=item.get("color", "#a7ad9f"), width=item.get("width", .2))
                 continue
             w, h = item["w"], item["h"]
-            if x < 0 or y < 0 or x + w > width + .01 or y + h > height + .01:
-                raise ValueError(f"Board slot exceeds physical page: {item.get('id', kind)}")
+            if not all(math.isfinite(v) for v in (x, y, w, h)) or min(w, h) <= 0:
+                raise ValueError("Board slot needs finite coordinates and positive size")
             if kind == "rect":
                 canvas.rect(x, y, w, h, fill=item.get("fill", "#f1f0e8"), stroke=item.get("stroke"))
                 continue
@@ -59,10 +58,6 @@ def compose(template: Path, out: Path, formats=None):
                 raise FileNotFoundError(source)
             slot = {"id": item.get("id", source.stem), "file": str(source), "rect_mm": [x, y, w, h],
                     "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
-            for previous in slots:
-                px, py, pw, ph = previous["rect_mm"]
-                if not item.get("allow_overlap", False) and min(x + w, px + pw) - max(x, px) > .01 and min(y + h, py + ph) - max(y, py) > .01:
-                    raise ValueError(f"Board content slots overlap: {slot['id']} / {previous['id']}")
             if kind == "pdf":
                 with fitz.open(source) as doc:
                     pg = doc[item.get("page", 0)]
@@ -78,30 +73,18 @@ def compose(template: Path, out: Path, formats=None):
                 factor = min(w / iw, h / ih)
                 effective_ppi = 25.4 / factor
                 check = {"id": slot["id"], "effective_ppi": round(effective_ppi, 2),
-                         "minimum_ppi": item.get("minimum_ppi", 100)}
+                         "minimum_ppi": item.get("minimum_ppi")}
                 image_checks.append(check)
-                if effective_ppi < check["minimum_ppi"]:
+                if check["minimum_ppi"] is not None and effective_ppi < check["minimum_ppi"]:
                     raise ValueError(f"Image resolution too low for {slot['id']}: {effective_ppi:.1f} PPI")
                 canvas.image(source, x, y, w, h)
             else:
                 raise ValueError(f"Unsupported board content type {kind}")
             slots.append(slot)
         stem = out / f"board-{i + 1:02d}"
-        for text_index, box in enumerate(text_boxes):
-            if box["allow_overlap"]:
-                continue
-            x, y, w, h = box["rect_mm"]
-            for other in slots + text_boxes[:text_index]:
-                px, py, pw, ph = other["rect_mm"]
-                if min(x + w, px + pw) - max(x, px) > .01 and min(y + h, py + ph) - max(y, py) > .01:
-                    raise ValueError("Text box overlaps another board content slot")
         report = canvas.save(stem, dpi=data.get("preview_dpi", 100),
                              metadata={"title": sheet.get("title", data.get("title", "EZarch"))}, formats=formats)
         report.update(slots=slots, image_checks=image_checks, text_boxes=text_boxes)
-        if report["text_overflow"]:
-            raise ValueError(f"Board text overflow: {report['text_overflow']}")
-        if report["geometry_overflow"]:
-            raise ValueError("Board linework extends beyond the page")
         if "pdf" in formats:
             with fitz.open(stem.with_suffix(".pdf")) as page_pdf:
                 final.insert_pdf(page_pdf)

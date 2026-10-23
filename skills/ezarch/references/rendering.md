@@ -1,6 +1,6 @@
 # 渲染与图像表达
 
-随库 Blender 能力见 [建模与操作](blender-modeling.md)。直接用 bpy 可创建或修改几何、材质、灯光、相机和渲染配置。[原生操作](edit-existing.md#blender) 说明如何延续用户场景。相机、细节、画面风格及是否使用模型由任务决定。
+用 bpy 创建或修改材质、灯光、相机和渲染设置；随库助手可运行已有场景。场景读写见 [原生操作](edit-existing.md#blender)，几何操作见 [建模](blender-modeling.md)。
 
 ## 按需使用生成式图像
 

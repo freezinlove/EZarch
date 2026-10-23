@@ -23,7 +23,7 @@ def test_explicit_properties_reach_dxf_pdf_and_svg(tmp_path):
     line, = drawing.line((10, 20), (90, 20), color="#194fbe", width=.5, dash=[7, 2, 1, 2])
     circle, = drawing.circle((50, 60), 15, color="#a83219", width=.25, dash=[3, 2])
     text, = drawing.text((50, 90), "COLOR", color="#884422", size=4)
-    drawing.save(tmp_path / "properties", formats=["dxf", "pdf", "svg"])
+    drawing.save(tmp_path / "properties", view_source="canvas", formats=["dxf", "pdf", "svg"])
     saved = ezdxf.readfile(tmp_path / "properties.dxf")
     for entity, color in [(line, (25, 79, 190)), (circle, (168, 50, 25)), (text, (136, 68, 34))]:
         assert saved.entitydb[entity.dxf.handle].rgb == color
@@ -95,7 +95,7 @@ def test_inherited_properties_remain_editable_and_explicit_values_do_not_change_
     before = list(TagCollector.dxftags(layer))
     inherited, = d.line((10, 10), (90, 10))
     explicit, = d.line((10, 30), (90, 30), color=1, width=.13)
-    d.save(tmp_path / "inherit", formats=["dxf", "svg"])
+    d.save(tmp_path / "inherit", view_source="canvas", formats=["dxf", "svg"])
     saved = ezdxf.readfile(tmp_path / "inherit.dxf")
     assert list(TagCollector.dxftags(saved.layers.get(layer.dxf.name))) == before
     entity = saved.entitydb[inherited.dxf.handle]
@@ -146,7 +146,7 @@ def test_holes_are_real_boundaries_and_show_underlying_content(tmp_path, reverse
     entities = drawing.poly(outer, holes=holes, close=True, fill="#ee0000", color="#0000ff", width=.25)
     hatch, = [e for e in entities if e.dxftype() == "HATCH"]
     assert len(entities) == 4
-    drawing.save(tmp_path / "holes", dpi=127, formats=["dxf", "pdf", "svg"])
+    drawing.save(tmp_path / "holes", view_source="canvas", dpi=127, formats=["dxf", "pdf", "svg"])
     saved = ezdxf.readfile(tmp_path / "holes.dxf")
     boundaries = saved.entitydb[hatch.dxf.handle].paths
     assert len(boundaries) == 3 and boundaries[0].path_type_flags & 1
@@ -161,7 +161,7 @@ def test_holes_are_real_boundaries_and_show_underlying_content(tmp_path, reverse
         assert pix.pixel(100, 100) == (238, 0, 0)
     assert not saved.audit().has_errors
     count = len(drawing.doc.entitydb), len(drawing.canvas.items)
-    drawing.save(tmp_path / "again", formats=["dxf"])
+    drawing.save(tmp_path / "again", view_source="canvas", formats=["dxf"])
     assert (len(drawing.doc.entitydb), len(drawing.canvas.items)) == count
 
 
@@ -181,7 +181,7 @@ def test_invalid_hole_is_reported_without_repair_or_mutation(hole):
 def test_text_anchor_cap_height_and_rotation_match_saved_native_semantics(tmp_path, angle, align):
     drawing = Drawing((0, 0, 100, 100), scale=1, margin=0)
     text, = drawing.text((50, 50), "Aa 中文", size=4, align=align, rotation=angle)
-    drawing.save(tmp_path / "text", formats=["dxf", "pdf", "svg"])
+    drawing.save(tmp_path / "text", view_source="canvas", formats=["dxf", "pdf", "svg"])
     saved = ezdxf.readfile(tmp_path / "text.dxf")
     entity = saved.entitydb[text.dxf.handle]
     assert tuple(entity.get_placement()[1]) == (50, 50, 0)
@@ -220,7 +220,7 @@ def test_standalone_canvas_keeps_em_baseline_and_arbitrary_widths(tmp_path):
 def test_zero_width_is_not_replaced_by_default_pen(tmp_path):
     drawing = Drawing((0, 0, 100, 100), scale=1)
     circle, = drawing.circle((50, 50), 10, width=0)
-    drawing.save(tmp_path / "hairline", formats=["dxf", "pdf", "svg"])
+    drawing.save(tmp_path / "hairline", view_source="canvas", formats=["dxf", "pdf", "svg"])
     assert ezdxf.readfile(tmp_path / "hairline.dxf").entitydb[circle.dxf.handle].dxf.lineweight == 0
     svg, = svg_items(tmp_path / "hairline.svg", "circle")
     assert svg.attrib["vector-effect"] == "non-scaling-stroke"

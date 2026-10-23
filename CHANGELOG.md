@@ -2,16 +2,12 @@
 
 ## Unreleased
 
-- Add optional read-only planar validity, short-edge, reversal and exact-duplicate observations with explicit parameters, coverage gaps, source locations and crop bounds. Narrow native DXF selection support reports unsupported inputs; results provide evidence rather than architectural approval or automatic repairs.
-- Preserve explicit drawing colors, DXF-supported paper lineweights and dash/gap lengths across CAD and vector outputs; retain layer inheritance without overwriting source resources. Add real polygon holes and font-based text anchor/rotation mapping, with format limits documented at the optional interfaces.
-- Extract independent 2D affine and paper-coordinate calculations, with explicit scope and task-based discovery; keep project-specific geometry, placement and orchestration outside the library.
-- Add Drawing.from_layout for existing DXF modelspace, paperspace and blocks, explicit unit/scale handling, non-overwriting resource selection and returned native entities; bound drawings do not create previews or save automatically.
-- Organize design knowledge around spatial relationships, measurement definitions, visual attributes and actual tool capabilities, without design cases, counterexamples or preset answers; separate drafting defaults from standard lookup and correct the documented area-calculation scope.
-- Add focused intent, feedback and project-decision guidance with task-oriented links; preserve AI design discretion, prior intent communication and user authorization without dialogue templates or mandatory stages.
-- Align skill instructions with optional architectural capabilities: remove universal proposal approval, output-type and generative-image restrictions while retaining technical limits and user scope.
-- Explain important design intentions before substantive work by default, with communication and continuation guided by user preferences, existing authorization and unresolved questions.
-- Keep progressive disclosure through task-oriented capability navigation and focused references; update UI metadata and clarify maintained tools, legacy interfaces and configurable drafting styles.
-- The E01/E02/E21 changes affect documentation and metadata; dependency management and update tooling remain unchanged.
+- Reorganize the entry into a short capability index and focused operation references. Replace the general design-judgment expansion with concise visual guidance linked to actual drawings, model views and edits.
+- Remove `audit`, `review`, wall diagnostics, annotation-conflict and reachability modules, issue/coverage reporting, and `check_clearances`. Retain direct geometry measurements, input errors and native file validity handling. These removed APIs have no success-returning compatibility stubs.
+- Render new Drawing exports from current CAD entities by default, including native edits and placed components. CAD text remains editable in DXF; SVG/PDF views use outlines. Explicit `view_source="canvas"` retains recorded Canvas exports, including editable text; it does not track native CAD changes. Legacy project view generation retains this recorded mode.
+- Connect the existing component geometry to `Drawing.symbol` and `Canvas.symbol`; `Canvas.cad` refreshes embedded CAD during saving. Extend CAD plotting to SVG and preserve exact physical page dimensions and explicitly selected TTF/OTF fonts.
+- Remove automatic overlap rejection from board composition and the legacy area brief; allow page cropping and impose an image PPI floor only when explicitly supplied.
+- Retain colors, lineweights, dash patterns, polygon holes, text positioning, coordinate transforms, measurements and native Drawing binding. Correct outdated interface descriptions and release manifests; dependency installation and update mechanisms are unchanged.
 
 ## 0.6.0
 

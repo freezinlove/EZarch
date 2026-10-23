@@ -1,6 +1,6 @@
 # 中国建筑制图表达
 
-按任务需要查阅制图依据和随库表达能力。是否采用某一制图约定取决于适用标准、地区、图种及用户要求；库内默认样式可调整，不定义所有图纸的视觉目标。
+制图依据定位与随库绘图参数。适用约定取决于地区、图种与项目要求，库内默认样式不是标准条文。
 
 ## 依据与条文定位
 
@@ -41,13 +41,13 @@ GB/T 50104—2010 的目录另列图线与比例、图例、图样画法和尺�
 
 | 现有方法 | 支持范围与参数含义 |
 |---|---|
-| `poly / line / rect / circle` | 二维几何；`poly` 的闭合填充当前只有外环，复杂孔洞可用原生 HATCH。部分颜色、虚线和填充属性在 Canvas 与 DXF 中映射不同，见源码 |
+| `poly / line / rect / circle` | 二维几何；`poly(..., holes=...)` 支持直边孔洞，颜色、纸面线宽及虚线参数见 [图纸接口](geometry-drawings.md)；曲线填充可用原生 HATCH |
 | `text` | 文字、纸面字高、对齐与旋转；实际字形及占位受所用字体影响 |
 | `axis` | 既有方法为固定 x 或固定 y 的正交轴；独立 `grids.draw_axis/draw_axis_tag` 支持任意方向与显式轴号位置，见 [轴网与柱资源](grids-columns.md)。原生图元也可直接使用 |
-| `dimension / chain` | 水平或竖直尺寸，DXF 使用原生 DIMENSION；斜向尺寸使用 ezdxf 对应接口 |
+| `dimension / chain` | dimension 支持端点对齐、斜向和指定方向投影，DXF 使用原生 DIMENSION；chain 为正交尺寸链 |
 | `level` | 输入 `value_mm`，默认换算成 m 并保留三位小数；接近零显示 ±0.000，`label` 可指定显示文字 |
 | `north / section_mark / index / leader` | 北针旋转、剖切位置与方向、索引号及图号、引线及文字；对应关系由调用者传入 |
-| `furniture` | 按类型、外廓尺寸、原点与旋转生成可编辑线条；当前提供简化图形，不推导实际使用区 |
+| `symbol` | 放置 [可编辑组件](editable-components.md)；旧 furniture 方法只保留简化图形兼容行为 |
 
 接口约定只作用于这次调用。`Drawing` 构造器新建文档；`Drawing.from_layout(...)` 可绑定已有模型空间、纸空间或图块，坐标采用目标单位，纸面尺寸、样式与保存约定见 [已有文档绑定](geometry-drawings.md#绘制到已有文档)。原生 ezdxf 的 ARC、块和 HATCH 能力可用于自定义表达；编辑既有实体见 [原生操作](edit-existing.md)。
 

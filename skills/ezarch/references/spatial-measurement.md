@@ -1,52 +1,19 @@
-# 空间测量与适用规范入口
+# 几何包络与局部截面
 
-这些助手在需要几何测量或使用空间核对时可用；布局、家具、设计深度及检查范围由本次任务决定。不存在统一的房间、设施或检查清单。
+这些函数返回几何与测量值，不识别空间用途或作出通行、使用、合规判断。坐标、测量方向与对象由调用者选取。
 
-## Python 助手
+## 包络
 
-所选边界面积、显式扣除与覆盖几何见 [面积与区域](area-regions.md)；实际端点和投影跨度见 [尺寸与字体](text-dimensions.md)。下方另有局部截面及连通计算，均不要求统一房间 schema，也不判断空间用途。
+`ezarch.analysis.swing_envelope(hinge, radius_mm, closed_angle_deg, opening_angle_deg=90)` 返回铰链门扫掠的多边形近似；坐标为 mm，角度为逆时针度数。
 
-- `ezarch.analysis.check_clearances(zones, obstacles, rooms=None)`：检查指定使用区与同层障碍物的相交；使用区指定 `room` 时另需传入对应房间边界以计算越界面积。只检查传入对象，不发现遗漏的空间或法规条件。
-- `swing_envelope(hinge, radius_mm, closed_angle_deg, opening_angle_deg=90)`：铰链门扫掠多边形，可供净空检查；滑动门需另用其运动几何。角度和半径对应实际门扇。
-- `oriented_footprint(size_mm, position_mm, rotation_z_deg)`：旋转矩形外廓。它是保守包围盒，不是精确家具轮廓或人的使用区。
-- Shapely 可计算自定义轮廓的交集、距离与面积；房间边界面积、建筑面积和统计表中的面积有不同定义。
+`oriented_footprint(size_mm, position_mm, rotation_z_deg)` 返回旋转矩形外廓。矩形包络、物体实际轮廓、运动范围和人的操作空间不是同一对象。
 
-静态外廓、运动扫掠与使用操作区是不同的几何对象。碰撞检查与下面的点连通计算相互独立，均不构成完整通行网络的校核。使用区的定义与判断依据由任务提供，专业关系见 [空间与使用关系](design-judgment.md#空间与使用关系)。
+## 指定截面的宽度
 
-采用图模联动时，饰面完成面和结构板顶可能不同；转换或标注可分别使用对应基准。纯概念、示意表达可使用相应简化，而不因此承担施工深度的模型要求。
+`ezarch.measurements.measure_clear_width(region, section, *, unit_mm, obstacles=None, source=None)` 接收有效 Polygon/MultiPolygon、两个不同端点的 LineString 和可选 ID→障碍面域映射。unit_mm 是每坐标单位对应的毫米数。孔洞不计入区域，障碍按并集扣除。
 
-## 局部截面与连接证据
+返回自由区域、截面内部区间、边界接触和各障碍与截面的接触。每个区间有 start/end、沿截面的 stations_mm、span_mm、truncated 和位置范围。两端均受区域边界限定时 width_mm 为该段长度；截面端点仍在区域内部时 width_mm 为 None，避免将过短截面的观察长度当作完整宽度。多个区间分别保留，沿边界重合不计作内部宽度。
 
-这些只读计算可以单独调用，也可使用原生几何方法。输入选取、测量口径、目标、允许通行的连接和结果解释由当前任务决定，没有默认检查顺序或必检对象。输入坐标的每单位对应毫米用 unit_mm 显式提供；源几何不修复、不移动、不吸附。
+这个量只属于给定有限直线，不能推断全局最窄位置、人体能否通过或疏散条件。无效几何报错，空区域返回 empty_free_space；不吸附、移动或自动修复输入。
 
-### 指定直线截面
-
-[`measure_clear_width(region, section, *, unit_mm, obstacles=None, source=None)`](../src/ezarch/measurements.py) 接收有效二维 Polygon/MultiPolygon、恰好两个不同端点的 LineString 截面、可选 ID 到障碍面域的映射。孔洞本来就不是可用区域，障碍按并集扣除；只对所给范围测量，不补充家具、柱或墙厚。
-
-返回 free_space、所有 interior intervals、截面与自由区域边界的接触、各障碍与截面的接触、原输入及 source 快照。每个区间都有实际 start/end、沿截面方向的 stations_mm、观察长度 span_mm、截断标记 truncated 和可供裁图的 location。两端均受边界限定时 width_mm 为该段长度；任一端仍是自由区域内部的截面端点时，截面可能太短，width_mm 为 None，不能把 span_mm 冒充完整净宽。沿边界重合的部分不计作内部宽度；孤立接触点保留在 boundary_contact，多个区间不相加、也不自动选最短或最长。
-
-观测范围只是一条有限直线。它不证明截面垂直于通路、选中了关键位置或得到全局最小净宽，也不判断人体使用、转身、疏散或合规。浮点叠加遵循 GEOS 精度，不做隐式栅格化；极端尺度或近退化几何需结合原数据判断。无效面域或调用参数直接报错，空自由区域明确返回 empty_free_space。
-
-### 指定目标的点连通
-
-[`reachable_targets(free_space, start, targets, *, unit_mm, allowed_space=None, expected_target_ids=None, source=None)`](../src/ezarch/routing.py) 接收明确的二维可通行面域、原始起点、ID 到目标点的映射。点可为二维坐标或 Point，面域可以带孔或包含多个分量。墙、家具、门洞状态等已由所给自由区域表达；已有 [区域布尔运算](wall-regions.md) 或原生 API 可供构造，但不要求先走某个构造流程。
-
-allowed_space 可选，仅取 free_space 与调用者指定允许区域的交集。不按房名决定公私、不自动允许穿过相邻房间、不把一条跨墙连线当作门洞。需要有向连接图、跨楼层许可或门状态逻辑时，可另用适当表示；首版只表达所给平面区域里的连接。
-
-每个目标单独返回原点、局部分量索引、location、reason 和 status：
-
-- connected_in_supplied_space：起终点都处于有效面域内部，属于同一内部连通分量。
-- disconnected_in_supplied_space：起终点均在内部，但分属不同分量；仅说明当前所给几何中不连通。
-- unresolved：起点或目标落在边界、界外、允许区域之外、缺失或无法读取，或有效区域为空。原因保留，不把点投影到最近区域后报告连通。
-
-只在角点接触的区域不作为内部通路；任何正宽连接均可能使点连通，这**不等于人或设备能通过**。多个目标落在同一个点仍分别保留 ID；expected_target_ids 可列出本次预期目标，缺项逐项为 missing_target。未传预期列表就没有列表外完整性依据。coverage 只指目标计算覆盖；空目标或无可判定目标为 none，没有全局通过值。
-
-结果同时保留有效区域、各连通分量、单位、来源及 not_checked。首版不生成路线，不含栅格分辨率、默认正交方向或转弯偏好；无法从点连通推断已绘流线分支完整，也不自动识别遗漏的入口。需要定位时可将单个目标记录传给 issue_region；缺失或无法读取的点没有可裁图位置。设计、视觉、使用和规范判断仍由 AI 结合实际证据完成。
-
-### 计算来源
-
-局部测量针对历史任务中线间距、墙面间距和柱后局部间距混淆的问题；连通部分复用历史自由区域差集、分量归属和明确目标清单的计算思想。可复用的是几何关系，不是当时的房间名单、翼部方向、墙厚、缓冲值或路径风格。通用截面/连通接口为新泛化实现，历史数据对照与新边界测试分别记录，不能声称所有项目或通行需求均已覆盖。
-
-## 技术规范资料
-
-所在地、用途、人群、规模和设计阶段影响规则的适用性。来源、版本和测量定义的查询见 [规范依据](standards.md)，中国制图表达见 [制图参考](chinese-drafting.md)。助手只检查传入的几何及阈值，专业合规结论需要对应条款、适用条件与实际证据；核验范围及记录深度由任务决定。
+其他操作见 [面积与区域](area-regions.md)、[端点与投影长度](text-dimensions.md)、[坐标转换](coordinate-transforms.md)。测量口径和适用条件见 [规范依据](standards.md)。

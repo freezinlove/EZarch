@@ -46,41 +46,8 @@ def shadow_vector(height_mm: float, sun: dict) -> list[float] | None:
     return [-length * math.sin(az), -length * math.cos(az)]
 
 
-def check_clearances(zones: list[dict], obstacles: list[dict], rooms: dict | None = None) -> dict:
-    """Check explicitly defined operational polygons. Geometry in millimetres.
-
-    A zone may ignore its owning furniture IDs. Boundary contact is allowed;
-    positive intersected area over tolerance_mm2 is an interference.
-    """
-    from shapely.geometry import Polygon
-    results = []
-    for zone in zones:
-        p = Polygon(zone["polygon"])
-        if not p.is_valid or p.area <= 0:
-            raise ValueError(f"Invalid clearance polygon {zone['id']}")
-        hits = []
-        for obstacle in obstacles:
-            if obstacle["id"] in zone.get("ignore", []):
-                continue
-            if obstacle.get("level") != zone.get("level"):
-                continue
-            area = p.intersection(Polygon(obstacle["polygon"])).area
-            if area > zone.get("tolerance_mm2", 1):
-                hits.append({"id": obstacle["id"], "overlap_mm2": area})
-        outside = 0
-        if zone.get("room"):
-            if not rooms or zone["room"] not in rooms:
-                raise ValueError(f"Unknown room {zone['room']}")
-            outside = p.difference(Polygon(rooms[zone["room"]])).area
-        results.append({"id": zone["id"], "conflicts": hits, "outside_mm2": outside,
-                        "passed": not hits and outside <= zone.get("tolerance_mm2", 1)})
-    return {"assessed": bool(zones), "passed": bool(zones) and all(r["passed"] for r in results),
-            "scope": "Only supplied zones, obstacles and room boundaries; not full code compliance",
-            "checks": results}
-
-
 def swing_envelope(hinge, radius_mm, closed_angle_deg, opening_angle_deg=90):
-    """Plan polygon swept by one hinged leaf; feed it to check_clearances.
+    """Plan polygon swept by one hinged leaf, available for drawing or measurement.
 
     Does not apply to sliding doors. Angles are counter-clockwise from world X.
     """
@@ -98,8 +65,7 @@ def oriented_footprint(size_mm, position_mm, rotation_z_deg=0):
     """Conservative XY envelope for a centre-bottom anchored imported asset.
 
     Use the measured, uniformly scaled dimensions from the render/import report,
-    not a catalogue name. The rotated rectangle can be tested against walls,
-    indoor exclusion polygons or circulation using check_clearances.
+    not a catalogue name. Returns geometry only; orientation and actual occupied shape come from the source asset.
     """
     if len(size_mm) < 2 or len(position_mm) < 2:
         raise ValueError("Need at least XY size and position")

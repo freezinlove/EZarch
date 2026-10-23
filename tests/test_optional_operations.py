@@ -4,12 +4,9 @@ import math
 import ezdxf
 import pymupdf as fitz
 import pytest
-from ezarch.audit import audit
 from ezarch.drafting import Drawing
-from ezarch.geometry import generate_model
 from ezarch.graphics import Canvas
 from ezarch.project import Project, skill_root
-from ezarch.views import generate_views
 
 
 def simple_project():
@@ -61,8 +58,10 @@ def test_symbol_parameters_reach_saved_geometry(tmp_path):
     assert sorted(lengths) == [600, 600, 900, 900]
 
 
-def test_selected_model_and_view_exports_audit_without_siblings(tmp_path):
+def test_selected_model_and_view_exports_without_siblings(tmp_path):
     pytest.importorskip('cadquery', reason='Legacy CadQuery compatibility only')
+    from ezarch.geometry import generate_model
+    from ezarch.views import generate_views
     p = simple_project()
     generate_model(p, tmp_path / 'model', formats=['scene', 'glb'])
     assert not (tmp_path / 'model/model.step').exists()
@@ -71,33 +70,5 @@ def test_selected_model_and_view_exports_audit_without_siblings(tmp_path):
     glb = trimesh.load(tmp_path / 'model/model.glb', force='scene')
     assert glb.metadata['ezarch_up_axis'] == 'Y'
     assert glb.bounds.tolist() == [[0, 0, -2], [4, 3, 0]]
-    assert audit(tmp_path / 'model', tmp_path / 'a')['passed']
     generate_views(p, tmp_path / 'views', formats=['pdf'])
     assert not (tmp_path / 'views/cut.dxf').exists()
-    assert audit(tmp_path / 'views', tmp_path / 'b')['passed']
-    (tmp_path / 'model/model.glb').unlink()
-    with pytest.raises(ValueError, match='Audit failed'):
-        audit(tmp_path / 'model', tmp_path / 'c')
-
-
-def test_standalone_dxf_audit_does_not_impose_mm_or_project(tmp_path):
-    doc = ezdxf.new()
-    doc.units = ezdxf.units.M
-    doc.modelspace().add_line([0, 0], [3, 0])
-    file = tmp_path / 'existing.dxf'
-    doc.saveas(file)
-    report = audit(file, tmp_path / 'check')
-    assert report['passed']
-    assert report['checks'][0]['detail']['declared_units'] == ezdxf.units.M
-
-
-def test_selected_exports_ignore_older_unselected_siblings(tmp_path):
-    pytest.importorskip('cadquery', reason='Legacy CadQuery compatibility only')
-    p = simple_project()
-    generate_model(p, tmp_path / 'model', formats=['step', 'scene', 'glb', '3dm', 'dae'])
-    p.elements[0]['size'][2] = 4000
-    generate_model(p, tmp_path / 'model', formats=['scene', 'glb'])
-    assert audit(tmp_path / 'model', tmp_path / 'check')['passed']
-    p.elements[0]['size'][2] = 5000
-    generate_model(p, tmp_path / 'model', formats=['step'])
-    assert audit(tmp_path / 'model', tmp_path / 'check')['passed']

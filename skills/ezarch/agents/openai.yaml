@@ -1,4 +1,4 @@
 interface:
   display_name: "EZarch"
-  short_description: "Architectural design support, CAD and visual tools"
+  short_description: "Tools for architectural drawings, models and visualization"
   default_prompt: "Use $ezarch to help with my architectural or spatial task, choosing suitable capabilities for my requirements and references."

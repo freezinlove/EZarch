@@ -1,26 +1,21 @@
 # EZarch
 
-**面向 AI 的建筑与空间表达工具指南。** 提供模块化的工具操作知识、Windows/macOS 基础设施和适用的技术制图参考。用户需求、参考内容和模型判断决定怎么设计、分析、绘制和交付；skill 提供帮助，不规定固定的制作流程。
+让 AI 更容易把自己的想法准确画出来、看清楚、继续改。
 
-AI 可主动参与构思与设计。对于重要设计或实质改动，通常先简洁说明主要意图与取舍，让用户了解准备怎么做；说明后的行动由用户要求、已有授权和关键不确定性决定，不设统一的方案审批阶段。用户明确的合作偏好优先，具体原则见 [Skill 入口](skills/ezarch/SKILL.md)。
+EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达工具 skill。适用于从自然语言需求开始的新设计，也适用于既有图纸或模型的修改与深化，支持平立剖图、场地与室内空间表达、三维模型、分析图、渲染和排版。
 
-## 按需使用
+它提供可调用的工具、可编辑组件、原生 API 操作知识、实际成果预览和制图依据，减少基础绘图与格式衔接的重复工作；设计构思、布局与视觉判断由 AI 结合用户需求和实际图纸完成。
 
-| 需要的能力 | 可选工具 |
-|---|---|
-| 二维 CAD / 技术线稿 | ezdxf，独立 Drawing |
-| 三维建模 / 场景 / 渲染 / 合成 | Blender Python、BMesh、Geometry Nodes、适用社区插件和资产 |
-| 图像构思 / 探索 / 素材 / 表现 | 宿主可用的生成式图像工具；不保证精确几何或跨视角一致 |
-| 模型剖切 / 正交可见线 | Blender 求值网格 + 可选几何与二维助手 |
-| 地图 / 分析图 / 图表 / 自由版式 | 原生 SVG、项目脚本、可选 Canvas/PDF 合成 |
-| 技术制图参考 | 适用的尺寸、轴线、标高、索引、比例等规则 |
-| 格式交换 | DWG/DXF、原生 3DM、网格 3DM/DAE、GLB、BLEND |
+## 结构与能力
 
-可以只用一个模块、直接调用原生 API、修改辅助脚本或完全绕过封装。已有文件和脚本可以继续使用。没有固定 task.yml、project.yml、quality.yml、四维验收表或全格式交付要求。辅助工具的参数约定只在调用该工具时生效。
+仓库中的可安装 skill 位于 [skills/ezarch](skills/ezarch/SKILL.md)。SKILL.md 是简短导航，references 按操作展开，src 和 scripts 提供可直接调用的工具，assets 保存字体与轻量制图样式。tests、tools 和发布配置用于维护，不是用户项目流程。
 
-名称与描述帮助发现 skill；[入口导航](skills/ezarch/SKILL.md#按需发现能力) 按当前需要连接已有工具和知识；相关参考再展开调用方法、参数和局限，无需先读完整手册。新增能力时同步相应导航和参考，未实现的能力不列为可用。
+- 绘图与修改：Drawing、ezdxf、原生 CAD/3DM/SVG/BLEND 操作。
+- 几何资源：门窗、家具、墙面、楼梯、电梯、柱和轴网；生成与放置分开，返回可编辑实体。
+- 看图与排版：当前 CAD 的 PDF/SVG/PNG 视图，Canvas 的 CAD/组件接入，Blender 视图和渲染。
+- 工具知识：单位、坐标、尺寸、字体、规范依据、格式交换和素材接入。
 
-正常输入是 DWG、3DM、图片、PDF、链接和自然语言需求，用户无需预转换或填写配置。AI 可按需查阅 [读取定位](skills/ezarch/references/file-understanding.md)、[设计判断](skills/ezarch/references/design-judgment.md)、[规范适用](skills/ezarch/references/standards.md) 与 [连续修改](skills/ezarch/references/edit-existing.md)。成果的精度、深度、可编辑性和视觉要求以本次用途为准，讨论、草图和成品可以采用不同表达；工具成功日志不是设计质量证明。
+具体调用从 [能力索引](skills/ezarch/SKILL.md#按需发现能力) 查找；看图提示见 [视图与视觉判断](skills/ezarch/references/viewing-editing.md)。不包含设计审查、碰撞判定、通行判定或自动验收程序；直接测量与技术错误提示保留。
 
 ## 安装与基础设施
 
@@ -49,8 +44,6 @@ DWG/DXF 通过可选免费闭源 ODA 转换器双向适配。随库重点支持 
 Blender 保留工程单位，几何快照和二维助手使用 mm，GLB 显式转换为 m；自由 SVG、地图或其他程序不必采用同一坐标体系。图纸缩放、字体和转换损失见 [格式说明](skills/ezarch/references/exchange-verification.md)。开放库回读不等于在目标商业软件中实际打开验收。
 
 原生入口可直接运行用户/AI 的脚本：`blender run <script.py> --source <existing.blend> --save <result.blend> --out <dir>`；无 source 时从空场景开始。`blender extract/export/view` 为可选网格交换和出图助手，见 [建模操作](skills/ezarch/references/blender-modeling.md)、[模型出图](skills/ezarch/references/geometry-drawings.md) 与 [社区接入](skills/ezarch/references/blender-ecosystem.md)。完整场景可继续直接使用 bpy，不要求统一 schema。
-
-`audit` 可按单文件或所选输出检查结构、单位和几何。旧 `review` 是依赖既有记录的可选兼容助手。技术检查不裁定设计、规范合规或审美。
 
 ## 仓库维护
 

@@ -176,6 +176,6 @@ def test_new_drawing_canvas_and_cad_get_the_same_selected_elements(tmp_path):
     draw_axis(draw, (0, 0), (6000, 8000), trim_start_mm=4, dash=(6, 2))
     tag = draw_axis_tag(draw, (0, 0), 'Q7', diameter_mm=8, text_height_mm=2.5)
     assert len(tag.entities) == 2 and len(draw.entities) == 3
-    draw.save(tmp_path/'grid', formats=['dxf', 'svg'])
+    draw.save(tmp_path/'grid', view_source='canvas', formats=['dxf', 'svg'])
     svg = (tmp_path/'grid.svg').read_text()
     assert '<circle' in svg and 'Q7' in svg and 'stroke-dasharray' in svg

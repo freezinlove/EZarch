@@ -79,6 +79,28 @@ class Canvas:
     def image(self, path, x, y, w, h):
         self.items.append(dict(kind="image", path=str(Path(path).resolve()), x=x, y=y, w=w, h=h))
 
+    def cad(self, doc, *, origin, scale, layout_name="Model", handles=None, region=None, padding=1):
+        """Place live CAD at a paper-mm origin, with native XY up and explicit scale."""
+        (origin,) = points_2d([origin])
+        if not math.isfinite(scale) or scale <= 0 or not doc.units:
+            raise ValueError("CAD placement needs positive scale and declared document units")
+        if not math.isfinite(padding) or padding < 0:
+            raise ValueError("CAD padding must be finite and nonnegative paper mm")
+        self.items.append(dict(kind="cad", doc=doc, origin=origin, scale=scale,
+                               layout_name=layout_name, handles=handles, region=region, padding=padding))
+
+    def symbol(self, symbol, *, origin, scale, style, rotation_deg=0, mirror_x=False):
+        """Place component geometry in paper mm; returned entities remain editable."""
+        import ezdxf
+
+        from .symbols import place_symbol
+        doc = ezdxf.new("R2010")
+        doc.units = ezdxf.units.MM
+        placed = place_symbol(symbol, doc.modelspace(), style=style, unit_mm=1,
+                              rotation_deg=rotation_deg, mirror_x=mirror_x)
+        self.cad(doc, origin=origin, scale=scale)
+        return placed
+
     def text_box(self, x, y, w, h, text, size=3, leading=None, **kwargs):
         """Measured wrapping for mixed CJK/Latin text; reject overflow, never shrink."""
         leading = leading or size * 1.55
@@ -143,8 +165,24 @@ class Canvas:
         # Batch adjacent paths: committing each triangle makes MuPDF rescan growing page streams.
         # Flush at text/media boundaries to preserve painter order.
         path_batch = None
+        cad_views = []
         for item in self.items:
             k = item["kind"]
+            if k == "cad":
+                import ezdxf
+
+                from .cad import render
+                content, view = render(item["doc"], scale=item["scale"],
+                                       layout_name=item["layout_name"], handles=item["handles"],
+                                       region=item["region"], margin=item["padding"], background=False)
+                cad_views.append(view)
+                xmin, ymin, xmax, ymax = view["source_region"]
+                factor = ezdxf.units.conversion_factor(item["doc"].units, ezdxf.units.MM) / item["scale"]
+                item = dict(kind="pdf", content=content, page=0,
+                            x=item["origin"][0] + xmin * factor - item["padding"],
+                            y=item["origin"][1] - ymax * factor - item["padding"],
+                            w=view["width_mm"], h=view["height_mm"])
+                k = "pdf"
             if k not in {"poly", "circle"} and path_batch is not None:
                 path_batch.commit()
                 path_batch = None
@@ -265,7 +303,8 @@ class Canvas:
                                f'height="{item["h"]}" preserveAspectRatio="xMidYMid meet" '
                                f'xlink:href="data:{mime};base64,{encoded}"/>')
                 else:
-                    with fitz.open(item["path"]) as source:
+                    with (fitz.open(stream=item["content"], filetype="pdf") if "content" in item
+                          else fitz.open(item["path"])) as source:
                         source_page = source[item["page"]]
                         page.show_pdf_page(rect, source, pno=item["page"], keep_proportion=True)
                         raw_svg = source_page.get_svg_image(text_as_path=True)
@@ -295,7 +334,7 @@ class Canvas:
         report = {"width_mm": self.width, "height_mm": self.height, "text_overflow": overflow,
                   "geometry_overflow": geometry_overflow,
                   "vector_paths": len(page.get_drawings()), "images": len(page.get_images()),
-                  "metadata": metadata or {}, "formats": sorted(formats)}
+                  "metadata": metadata or {}, "formats": sorted(formats), "cad_views": cad_views}
         write_json(stem.with_suffix(".report.json"), report)
         doc.close()
         return report

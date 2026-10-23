@@ -485,10 +485,25 @@ class Drawing:
         self.symbols.append({"kind": "furniture", "type": kind, "origin": origin,
                              "size": size, "rotation": rotation})
 
-    def save(self, stem: Path, dpi=150, metadata=None, formats=None):
+    def symbol(self, symbol, *, style, origin=(0, 0), rotation_deg=0,
+               mirror_x=False, layer="0", role_layers=None, role_linetypes=None):
+        """Place editable native geometry; current entities appear in native saves."""
+        from .symbols import place_symbol
+        placed = place_symbol(symbol, self.ms, style=style, unit_mm=self._unit_mm,
+                              origin=origin, rotation_deg=rotation_deg, mirror_x=mirror_x,
+                              layer=layer, role_layers=role_layers, role_linetypes=role_linetypes)
+        self.entities.extend(placed.entities)
+        return placed
+
+    def save(self, stem: Path, dpi=150, metadata=None, formats=None, *, view_source="native"):
+        """Views use current DXF entities; canvas explicitly exports the recorded Canvas."""
         import shutil
         if self._bound:
             raise ValueError("Bound Drawing does not export: save the full document with doc.saveas()")
+        stem = Path(stem)
+        stem.parent.mkdir(parents=True, exist_ok=True)
+        if view_source not in {"native", "canvas"}:
+            raise ValueError("view_source: native or canvas")
         formats = set(["dxf", "svg", "pdf", "png"] if formats is None else formats)
         if not formats or formats - {"dxf", "svg", "pdf", "png"}:
             raise ValueError("Drawing formats: dxf, svg, pdf, png")
@@ -500,9 +515,24 @@ class Drawing:
         original_items = list(self.canvas.items)
         meta = {**(metadata or {}), "title": self.title, "scale": self.scale,
                 "dimensions": self.dimensions, "symbols": self.symbols,
-                "formats": sorted(formats)}
+                "formats": sorted(formats), "view_source": view_source}
         try:
-            report = self.canvas.save(stem, dpi=dpi, metadata=meta, formats=formats - {"dxf"})
+            if view_source == "canvas":
+                report = self.canvas.save(stem, dpi=dpi, metadata=meta, formats=formats - {"dxf"})
+            elif formats - {"dxf"}:
+                from .cad import plot
+                # Resolve the selected font without changing the portable DXF font name.
+                previous_font = self.doc.styles.get(self.text_style).dxf.font
+                try:
+                    self.doc.styles.get(self.text_style).dxf.font = str(self.canvas.font_path.resolve())
+                    report = plot(self.doc, stem, scale=self.scale, region=self.bounds,
+                                  margin=self.margin, dpi=dpi, formats=formats - {"dxf"})
+                finally:
+                    self.doc.styles.get(self.text_style).dxf.font = previous_font
+                report["metadata"] = meta
+                write_json(stem.with_suffix(".report.json"), report)
+            else:
+                report = {"formats": ["dxf"], "metadata": meta}
         finally:
             self.canvas.items = original_items
         if "dxf" in formats:

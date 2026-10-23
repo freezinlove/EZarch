@@ -4,12 +4,10 @@ import ezdxf
 import pymupdf as fitz
 import pytest
 import yaml
-from ezarch.audit import audit
-from ezarch.board import compose
 from ezarch.geometry import build, generate_model
 from ezarch.graphics import Canvas
 from ezarch.project import Project, fingerprint, read_project
-from ezarch.views import extract_view, generate_views
+from ezarch.views import extract_view
 
 
 def project(**changes):
@@ -22,29 +20,6 @@ def project(**changes):
                 dimensions=[dict(id='width', p1=[0, 0], p2=[6000, 0], base=[0, -900], view='plan')])
     data.update(changes)
     return Project.model_validate(data)
-
-
-def test_opening_topology_and_units(tmp_path):
-    pytest.importorskip('cadquery', reason='Legacy CadQuery compatibility only')
-    p = project()
-    parts = build(p)
-    plan = extract_view(parts, p.views[0])
-    section = extract_view(parts, p.views[1])
-    assert sum(c['area_mm2'] for c in plan['cuts']) == pytest.approx(5000 * 300)
-    assert sum(c['area_mm2'] for c in section['cuts']) == pytest.approx(6000 * 3000 - 1000 * 2100)
-    assert len(plan['cuts']) == 2  # Door void separates the wall into two islands.
-    assert len(section['cuts']) == 1  # The lintel connects both jambs.
-    result = generate_model(p, tmp_path / 'model', formats=['step', 'scene', 'glb', '3dm', 'dae'])
-    assert result['geometry_valid']
-    generate_views(p, tmp_path / 'views')
-    result = audit(tmp_path, tmp_path / 'audit')
-    assert result['passed']
-    dxf = ezdxf.readfile(tmp_path / 'views/plan.dxf')
-    assert dxf.units == 4
-    assert list(dxf.modelspace().query('DIMENSION'))[0].get_measurement() == pytest.approx(6000)
-    with fitz.open(tmp_path / 'views/plan.pdf') as doc:
-        assert len(doc[0].get_images()) == 0
-        assert len(doc[0].get_drawings()) > 10
 
 
 def test_input_validation():
@@ -86,46 +61,6 @@ def test_dxf_to_model_to_step_and_source_change(tmp_path):
     assert build(p)[0].shape.Volume() == pytest.approx(7000 * 4000 * 3000)
 
 
-def test_parameter_change_and_stale_detection(tmp_path):
-    pytest.importorskip('cadquery', reason='Legacy CadQuery compatibility only')
-    p = project()
-    config = tmp_path / 'project.yml'
-    config.write_text(yaml.safe_dump(p.model_dump()))
-    generate_views(p, tmp_path / 'outputs/views')
-    changed = p.model_copy(deep=True)
-    changed.elements[0]['openings'][0]['width'] = 1400
-    config.write_text(yaml.safe_dump(changed.model_dump()))
-    with pytest.raises(ValueError, match='Audit failed'):
-        audit(config, tmp_path / 'outputs/audit')
-    generate_views(changed, tmp_path / 'outputs/views')
-    assert audit(config, tmp_path / 'outputs/audit')['passed']
-    assert sum(c['area_mm2'] for c in extract_view(build(changed), changed.views[0])['cuts']) == pytest.approx(4600 * 300)
-
-
-def test_board_independent_scale_collision_and_font(tmp_path):
-    c = Canvas(100, 70)
-    c.text(10, 15, '仿宋：平面图、剖面图、立面图', size=3)
-    c.line(10, 30, 70, 30)
-    c.save(tmp_path / 'external')
-    template = {'sheets': [{'size_mm': [210, 297], 'items': [dict(type='pdf', file='external.pdf', x=20,y=20,w=100,h=70,scale_lock=True)]}]}
-    path = tmp_path / 'board.yml'
-    path.write_text(yaml.safe_dump(template))
-    assert compose(path, tmp_path / 'board')['pages'] == 1
-    with fitz.open(tmp_path / 'board/presentation.pdf') as pdf:
-        assert '平面图' in pdf[0].get_text()
-        assert pdf[0].rect.width * 25.4 / 72 == pytest.approx(210, abs=.001)
-    assert audit(tmp_path / 'board', tmp_path / 'board/audit')['passed']
-    template['sheets'][0]['items'][0]['w'] = 90
-    path.write_text(yaml.safe_dump(template))
-    with pytest.raises(ValueError, match='change scale'):
-        compose(path, tmp_path / 'fail-scale')
-    template['sheets'][0]['items'][0]['w'] = 100
-    template['sheets'][0]['items'] *= 2
-    path.write_text(yaml.safe_dump(template))
-    with pytest.raises(ValueError, match='overlap'):
-        compose(path, tmp_path / 'fail-overlap')
-
-
 def test_stair_risers_have_no_accidental_gaps():
     pytest.importorskip('cadquery', reason='Legacy CadQuery compatibility only')
     p = project(elements=[dict(id='stair', kind='stair', origin=[0,0,0], steps=12, rise=160, run=280, width=1200, material='wall')])
@@ -160,14 +95,6 @@ def test_reference_pdf_vectors_and_calibration(tmp_path):
     assert result['calibration']['mm_per_source_pixel'] == 10
 
 
-def test_missing_drawing_is_audit_failure(tmp_path):
-    pytest.importorskip('cadquery', reason='Legacy CadQuery compatibility only')
-    generate_views(project(), tmp_path / 'views')
-    (tmp_path / 'views/plan.dxf').unlink()
-    with pytest.raises(ValueError, match='Audit failed'):
-        audit(tmp_path, tmp_path / 'audit')
-
-
 def test_mixed_chinese_area_unit_uses_real_superscript(tmp_path):
     c = Canvas(100, 40)
     c.text(10, 20, '160.0 m² 室内面积', size=4)
@@ -176,3 +103,45 @@ def test_mixed_chinese_area_unit_uses_real_superscript(tmp_path):
     with fitz.open(tmp_path / 'units.pdf') as doc:
         assert '²' in doc[0].get_text()
         assert '室内面积' in doc[0].get_text()
+
+
+def test_opening_topology_and_units(tmp_path):
+    pytest.importorskip('cadquery', reason='Legacy CadQuery compatibility only')
+    from ezarch.views import generate_views
+    p = project()
+    parts = build(p)
+    plan = extract_view(parts, p.views[0])
+    section = extract_view(parts, p.views[1])
+    assert sum(c['area_mm2'] for c in plan['cuts']) == pytest.approx(5000 * 300)
+    assert sum(c['area_mm2'] for c in section['cuts']) == pytest.approx(6000 * 3000 - 1000 * 2100)
+    assert len(plan['cuts']) == 2  # Door void separates the wall into two islands.
+    assert len(section['cuts']) == 1  # The lintel connects both jambs.
+    result = generate_model(p, tmp_path / 'model', formats=['step', 'scene', 'glb', '3dm', 'dae'])
+    assert result['geometry_valid']
+    generate_views(p, tmp_path / 'views')
+    dxf = ezdxf.readfile(tmp_path / 'views/plan.dxf')
+    assert dxf.units == 4
+    assert list(dxf.modelspace().query('DIMENSION'))[0].get_measurement() == pytest.approx(6000)
+    with fitz.open(tmp_path / 'views/plan.pdf') as doc:
+        assert len(doc[0].get_images()) == 0
+        assert len(doc[0].get_drawings()) > 10
+
+
+def test_board_explicit_scale_and_font(tmp_path):
+    from ezarch.board import compose
+    c = Canvas(100, 70)
+    c.text(10, 15, '仿宋：平面图、剖面图、立面图', size=3)
+    c.line(10, 30, 70, 30)
+    c.save(tmp_path / 'external')
+    template = {'sheets': [{'size_mm': [210, 297], 'items': [dict(type='pdf', file='external.pdf', x=20,y=20,w=100,h=70,scale_lock=True)]}]}
+    path = tmp_path / 'board.yml'
+    path.write_text(yaml.safe_dump(template))
+    assert compose(path, tmp_path / 'board')['pages'] == 1
+    with fitz.open(tmp_path / 'board/presentation.pdf') as pdf:
+        assert '平面图' in pdf[0].get_text()
+        assert pdf[0].rect.width * 25.4 / 72 == pytest.approx(210, abs=.001)
+    template['sheets'][0]['items'][0]['w'] = 90
+    path.write_text(yaml.safe_dump(template))
+    with pytest.raises(ValueError, match='change scale'):
+        compose(path, tmp_path / 'fail-scale')
+    template['sheets'][0]['items'][0]['w'] = 100

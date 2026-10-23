@@ -1,6 +1,6 @@
 # 楼梯、电梯的局部几何资源
 
-`ezarch.vertical_symbols` 返回可编辑的局部 mm `Symbol`，沿用 [组件的表达与放置](editable-components.md)。这些资源可单独取用、修改原生实体或与任意其他几何组合；它们不是标准核心筒模板、完整类型清单或 AI 的能力边界。布局、楼层表达、尺寸依据和成果深度由任务决定。
+`ezarch.vertical_symbols` 返回局部 mm 的可编辑 `Symbol`，包含独立梯段、方向标记、折断线和电梯局部几何，沿用 [组件的表达与放置](editable-components.md)。
 
 ## 梯段、折断和方向
 

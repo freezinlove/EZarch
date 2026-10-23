@@ -9,7 +9,6 @@ from shapely.geometry import LineString, Point, Polygon
 from shapely.ops import unary_union
 
 from .frames import _finite
-from .diagnostics import geometry_location
 from .wall_regions import _area_parts, _geometry, _number, _region, _regions
 
 
@@ -149,7 +148,8 @@ def measure_clear_width(region, section, *, unit_mm, obstacles=None, source=None
         spans.append({"start": start, "end": end, "span_mm": span_mm,
                       "width_mm": None if any(clipped) else span_mm, "truncated": clipped,
                       "stations_mm": stations, "geometry": LineString(endpoints),
-                      "location": geometry_location(line, precision="section_interval")})
+                      "location": {"bounds": tuple(line.bounds), "points": [tuple(line.interpolate(.5, normalized=True).coords[0])],
+                                   "precision": "section_interval"}})
     spans.sort(key=lambda span: span["stations_mm"][0])
     return {"intervals": spans, "region": region, "section": section, "free_space": free,
             "boundary_contact": boundary_contact, "obstacles": obstacles, "unit_mm": unit_mm,
