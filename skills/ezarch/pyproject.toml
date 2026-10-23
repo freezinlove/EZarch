@@ -34,6 +34,7 @@ only-include = [
   "src/ezarch/runtime.py", "src/ezarch/updates.py", "src/ezarch/storage.py",
   "src/ezarch/references.py", "src/ezarch/selection.py",
   "src/ezarch/site_symbols.py",
+  "src/ezarch/delivery.py",
   "src/ezarch/_drawing.py",
   "src/ezarch/symbols.py", "src/ezarch/furniture.py",
   "src/ezarch/wall_regions.py", "src/ezarch/vertical_symbols.py",

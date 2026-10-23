@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add explicit-list batch CAD conversion with per-file status and hash-verified resume, ordered PDF combination/bookmarks, and selected-file ZIP packaging.
+
 - Add editable route/direction, road-boundary and canopy primitives. Add per-text/role fonts, TTC face export, shaped HTML text boxes, SVG composition and explicit editable/outlined SVG text.
 
 - Add selected PDF page/crop exports, explicit vector-to-CAD mapping with unsupported clipping reported, affine control-point fitting, nested entity selection, temporary view styles, version-bound replacement and same-extent change previews.

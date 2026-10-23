@@ -38,6 +38,7 @@ EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达
 | 制作 SVG、分析图或版面 | [Canvas 与矢量排版](references/diagrams-boards.md) · [地图、太阳与影长](references/site-analysis.md) |
 | 看清实际结果、继续修改 | [视图选择与视觉判断](references/viewing-editing.md) |
 | 采用制图规范或查找技术依据 | [制图表达](references/chinese-drafting.md) · [规范适用](references/standards.md) |
+| 批量转换、合订或整理指定成果 | [显式文件列表与交付操作](references/delivery.md) |
 | 获取素材、扩展工具或交换格式 | [素材](references/public-assets.md) · [Blender 扩展](references/blender-ecosystem.md) · [格式交换](references/exchange-verification.md) |
 | 保存项目、管理安装副本 | [文件位置与仓库边界](references/storage-updates.md) |
 | 准备运行环境或排查依赖 | [Windows/macOS 环境与命令入口](references/environment.md) |

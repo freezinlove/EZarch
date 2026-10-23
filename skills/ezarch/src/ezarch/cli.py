@@ -14,6 +14,9 @@ from .project import read_project, write_json
 
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "delivery":
+        from .delivery import main as delivery_main
+        return delivery_main(argv[1:])
     if argv and argv[0] == "runtime":
         from .runtime import main as runtime_main
         return runtime_main(argv[1:])
