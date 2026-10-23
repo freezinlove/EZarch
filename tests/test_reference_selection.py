@@ -17,6 +17,7 @@ def source_pdf(path):
         shape.commit()
         page.draw_rect((40, 70, 100, 120), color=(0, 0, 0), fill=(.8, .9, .8))
         page.insert_text((20, 170), 'Reference page')
+        page.draw_circle((250, 100), 20)
     doc.save(path)
     doc.close()
 
@@ -97,3 +98,19 @@ def test_replacement_keeps_other_geometry_and_version_bound_patch(tmp_path):
     with pytest.raises(ValueError, match='Source changed'):
         selection.patch_document(tmp_path / 'source.dxf', tmp_path / 'patch.dxf', [line.dxf.handle], [replacement], expected_sha256='wrong')
     assert not (tmp_path / 'patch.dxf').exists()
+
+
+@pytest.mark.parametrize('rotation', [0, 90, 180, 270])
+def test_rotated_pdf_crop_matches_original_pixels(tmp_path, rotation):
+    from PIL import Image, ImageChops, ImageStat
+    source_pdf(tmp_path / 'plain.pdf')
+    with fitz.open(tmp_path / 'plain.pdf') as doc:
+        doc[0].set_rotation(rotation)
+        doc.save(tmp_path / 'rotated.pdf')
+    references.extract_reference(tmp_path / 'rotated.pdf', tmp_path / 'crop', pages=[1], region=(10,10,160,180), dpi=144)
+    with fitz.open(tmp_path / 'crop/page-001.pdf') as doc:
+        pixmap = doc[0].get_pixmap(dpi=144, alpha=False)
+    rendered = Image.frombytes('RGB', (pixmap.width, pixmap.height), pixmap.samples)
+    original = Image.open(tmp_path / 'crop/page-001.png').convert('RGB')
+    assert original.size == rendered.size
+    assert max(ImageStat.Stat(ImageChops.difference(original, rendered)).mean) < .01

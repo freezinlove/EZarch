@@ -56,7 +56,14 @@ def extract_reference(source, out, *, pages=None, region=None, dpi=150):
             page.get_pixmap(dpi=dpi, clip=clip, alpha=False).save(stem.with_suffix('.png'))
             view = fitz.open()
             target = view.new_page(width=clip.width, height=clip.height)
-            target.show_pdf_page(target.rect, doc, number - 1, clip=source_clip, rotate=page.rotation)
+            rotation = page.rotation
+            # show_pdf_page intersects clip with page.rect; normalize that rectangle
+            # to source coordinates before inserting, then restore the source view.
+            page.set_rotation(0)
+            try:
+                target.show_pdf_page(target.rect, doc, number - 1, clip=source_clip, rotate=-rotation)
+            finally:
+                page.set_rotation(rotation)
             view.save(stem.with_suffix('.pdf'))
             stem.with_suffix('.svg').write_text(target.get_svg_image(text_as_path=True), encoding='utf-8')
             view.close()
