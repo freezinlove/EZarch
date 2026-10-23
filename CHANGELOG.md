@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add selected PDF page/crop exports, explicit vector-to-CAD mapping with unsupported clipping reported, affine control-point fitting, nested entity selection, temporary view styles, version-bound replacement and same-extent change previews.
+
 - Add release manifests, cached nonblocking update notices, optional background preparation, explicit safe activation/reload, local-change protection, rollback and interrupted-transaction recovery. Add tagged release packaging workflow.
 
 - Add user-selected shared runtime locations, dependency reuse, isolated caches, capability probes and recoverable preparation. Keep old environments and make system font registration explicit.

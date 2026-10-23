@@ -38,7 +38,10 @@ def brief(project: Project, out: Path):
     return report
 
 
-def reference(source: Path, out: Path, known_mm=None, pixel_distance=None):
+def reference(source: Path, out: Path, known_mm=None, pixel_distance=None, *, pages=None, region=None, dpi=150):
+    if source.suffix.lower() == ".pdf" and (pages is not None or region is not None):
+        from .references import extract_reference
+        return extract_reference(source, out, pages=pages, region=region, dpi=dpi)
     import hashlib
 
     import pymupdf as fitz

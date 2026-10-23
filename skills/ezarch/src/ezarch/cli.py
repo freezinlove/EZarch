@@ -47,6 +47,9 @@ def main(argv=None):
             command.add_argument("--width", type=int, default=None)
             command.add_argument("--samples", type=int, default=None)
         if name == "reference":
+            command.add_argument("--pages", nargs="+", type=int)
+            command.add_argument("--region", nargs=4, type=float)
+            command.add_argument("--dpi", type=int, default=150)
             command.add_argument("--known-mm", type=float)
             command.add_argument("--pixel-distance", type=float)
         if name == "exchange":
@@ -85,7 +88,7 @@ def main(argv=None):
         elif args.module in ("brief", "reference"):
             from .intake import brief, reference
             result = brief(read_project(args.input), args.out) if args.module == "brief" else reference(
-                args.input, args.out, args.known_mm, args.pixel_distance)
+                args.input, args.out, args.known_mm, args.pixel_distance, pages=args.pages, region=args.region, dpi=args.dpi)
         elif args.module == "diagram":
             from .diagrams import generate_diagrams
             result = generate_diagrams(read_project(args.input), args.out, args.level,

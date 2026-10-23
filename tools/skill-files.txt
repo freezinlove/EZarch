@@ -83,3 +83,6 @@ src/ezarch/storage.py
 references/storage-updates.md
 src/ezarch/updates.py
 scripts/update.py
+src/ezarch/references.py
+src/ezarch/selection.py
+references/reference-views-editing.md

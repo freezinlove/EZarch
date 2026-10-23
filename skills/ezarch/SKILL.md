@@ -27,6 +27,7 @@ EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达
 
 | 当前操作 | 入口 |
 |---|---|
+| 选页提取、嵌套选择、临时视图或局部替换 | [读取与修改操作](references/reference-views-editing.md) |
 | 读取原文件、定位对象或参考尺度 | [inspect / query、文件预览](references/file-understanding.md) · [参考与尺度](references/design-reference.md) |
 | 绘制、标注或修改二维图纸 | [Drawing 与原生 CAD](references/geometry-drawings.md) · [编辑现有 CAD/3DM/SVG/BLEND](references/edit-existing.md) |
 | 取用可编辑组件、切换彩色或线稿 | [门窗与家具、CAD/Canvas 放置](references/editable-components.md) · [楼梯与电梯](references/vertical-components.md) · [轴网与柱](references/grids-columns.md) |
