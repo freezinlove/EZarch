@@ -303,34 +303,65 @@ class Drawing:
                              "at_mm": at * self._unit_mm})
 
     @_draw_entities
-    def dimension(self, a, b, base, text_size=2.5):
+    def dimension(self, a, b, base, text_size=2.5, *, direction=None, decimals=0,
+                  text_override=None, source=None):
+        """Native linear dimension from actual endpoints; optional projection.
+
+        base locates the dimension line. source is caller-provided provenance,
+        saved at creation time; it is not an associative link to other entities.
+        Text override accepts a plain single-line literal, not DXF formatting.
+        """
+        from .measurements import measure_span
+
+        measured = measure_span(a, b, unit_mm=self._unit_mm, direction=direction, source=source)
+        a, b = measured["p1"], measured["p2"]
+        base, = points_2d([base])
+        if measured["endpoint_distance_mm"] == 0:
+            raise ValueError("A dimension needs distinct endpoints")
+        if not math.isfinite(text_size) or text_size <= 0:
+            raise ValueError("Positive finite text_size required")
+        if isinstance(decimals, bool) or not isinstance(decimals, int) or not 0 <= decimals <= 8:
+            raise ValueError("DXF dimension decimals must be an integer in 0..8")
+        if text_override is not None and (
+                not isinstance(text_override, str) or not text_override.strip()
+                or any(c in "\\{}" or ord(c) < 32 for c in text_override)
+                or "<>" in text_override or "%%" in text_override):
+            raise ValueError("text_override requires a nonblank plain single-line literal")
+        # Canonical line direction keeps text readable and preserves legacy XY orientation.
+        angle = math.degrees(math.atan2(*reversed(measured["direction"]))) % 180
+        tangent = (math.cos(math.radians(angle)), math.sin(math.radians(angle)))
+        normal = (-tangent[1], tangent[0])
+
+        def projected(point):
+            distance = sum((point[i]-base[i])*normal[i] for i in range(2))
+            return tuple(point[i]-distance*normal[i] for i in range(2))
+
+        aa, bb = projected(a), projected(b)
         s = self.scale
-        if abs(a[1] - b[1]) * self._unit_mm < .001:
-            angle, aa, bb = 0, [a[0], base[1]], [b[0], base[1]]
-            text_at, rot = [(a[0] + b[0]) / 2, base[1] + 1.8 * s], 0
-        elif abs(a[0] - b[0]) * self._unit_mm < .001:
-            angle, aa, bb = 90, [base[0], a[1]], [base[0], b[1]]
-            text_at, rot = [base[0] - 1.8 * s, (a[1] + b[1]) / 2], 90
-        else:
-            raise ValueError("Use ezdxf adapter for non-orthogonal dimensions")
-        if self.canvas is not None:
-            self._canvas_dimension(a, b, aa, bb, text_at, rot, text_size)
+        text_at = tuple((aa[i]+bb[i])/2 + normal[i]*1.8*s for i in range(2))
+        display = text_override if text_override is not None else f"{measured['measured_mm']:.{decimals}f}"
         overrides = {
             "dimtxt": text_size * s, "dimasz": 2 * s, "dimexo": 2 * s,
-            "dimexe": 2 * s, "dimdec": 0, "dimtad": 1, "dimblk": "ARCHTICK", "dimtxsty": self.text_style,
-            "dimlfac": self._unit_mm}
+            "dimexe": 2 * s, "dimdec": decimals, "dimtad": 1, "dimblk": "ARCHTICK",
+            "dimtxsty": self.text_style, "dimlfac": self._unit_mm, "dimzin": 0, "dimdsep": 46,
+            "dimrnd": 0, "dimpost": "", "dimalt": 0, "dimtol": 0, "dimlim": 0}
         if self._bound:
             # DXF scales all style lengths, including inherited text gaps. Keep
             # these values in paper mm so target units do not distort placement.
             overrides.update(dimtxt=text_size, dimasz=2, dimexo=2, dimexe=2, dimscale=s)
         dimension = self.ms.add_linear_dim(base=base, p1=a, p2=b, angle=angle, dimstyle=self.dimstyle,
+            text=text_override if text_override is not None else "<>",
             override=overrides, dxfattribs={"layer": self._layer("A-DIM")})
         dimension.render()
         self.entities.append(dimension.dimension)
-        self.dimensions.append({"p1": a, "p2": b, "base": base,
-                                "measured_mm": math.dist(a, b) * self._unit_mm})
+        self.dimensions.append({**measured, "base": base, "dimension_endpoints": (aa, bb),
+                                "handle": dimension.dimension.dxf.handle, "decimals": decimals,
+                                "display_text": display, "text_override": text_override,
+                                "tracking": "creation snapshot; no automatic source association"})
+        if self.canvas is not None:
+            self._canvas_dimension(a, b, aa, bb, text_at, angle, text_size, display)
 
-    def _canvas_dimension(self, a, b, aa, bb, text_at, rot, text_size):
+    def _canvas_dimension(self, a, b, aa, bb, text_at, rot, text_size, display):
         s = self.scale
         for p, q in [(a, aa), (b, bb)]:
             v = [q[i] - p[i] for i in range(2)]
@@ -340,11 +371,13 @@ class Drawing:
                 self.canvas.poly([self.paper([p[i] + unit[i] * 2 * s for i in range(2)]),
                                   self.paper([q[i] + unit[i] * 2 * s for i in range(2)])], width=.13)
         self.canvas.poly([self.paper(aa), self.paper(bb)], width=.13)
+        theta = math.radians(rot+45)
+        tick = (math.cos(theta)*s, math.sin(theta)*s)
         for p in [aa, bb]:
-            self.canvas.poly([self.paper([p[0] - s, p[1] - s]), self.paper([p[0] + s, p[1] + s])], width=.25)
-        value = math.dist(a, b)
+            self.canvas.poly([self.paper([p[i]-tick[i] for i in range(2)]),
+                              self.paper([p[i]+tick[i] for i in range(2)])], width=.25)
         x, y = self.paper(text_at)
-        self.canvas.text(x, y, f"{value:.0f}", size=text_size, align="center", rotation=rot)
+        self.canvas.text(x, y, display, size=text_size, align="center", rotation=rot)
 
     @_draw_entities
     def chain(self, values, fixed, base, orientation="x"):

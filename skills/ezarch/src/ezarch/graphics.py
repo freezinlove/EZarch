@@ -18,25 +18,8 @@ PT = 72 / 25.4
 @lru_cache(maxsize=32)
 def _cap_metrics(path):
     """Match CAD cap-height/baseline semantics using the selected font's outlines."""
-    from fontTools.pens.boundsPen import BoundsPen
-    from fontTools.ttLib import TTFont
-
-    with TTFont(path) as font:
-        glyphs, cmap = font.getGlyphSet(), font.getBestCmap()
-        bounds = []
-        for char in "xA":
-            if ord(char) not in cmap:
-                raise ValueError("Cap-height sizing requires x/A font metrics; use em sizing or another font")
-            pen = BoundsPen(glyphs)
-            glyphs[cmap[ord(char)]].draw(pen)
-            if pen.bounds is None:
-                raise ValueError("Missing x/A font outlines for cap-height sizing")
-            bounds.append(pen.bounds)
-        baseline, units = bounds[0][1], font["head"].unitsPerEm
-        cap = bounds[1][3] - baseline
-        if cap <= 0:
-            raise ValueError("Positive cap height required")
-        return cap / units, baseline / units
+    from .fonts import cap_metrics
+    return cap_metrics(path)
 
 
 def rgb(value):

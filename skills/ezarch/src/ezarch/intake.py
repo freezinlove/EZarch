@@ -6,14 +6,17 @@ from .project import Project, fingerprint, write_json
 
 def brief(project: Project, out: Path):
     from shapely.geometry import Polygon
+    from .measurements import measure_area
     areas, polygons = [], []
     for room in project.rooms:
         polygon = Polygon(room["polygon"])
         if not polygon.is_valid:
             raise ValueError(f"Invalid room boundary: {room.get('id')}")
         polygons.append(polygon)
+        measured = measure_area(polygon, unit_mm=1)
         areas.append({"id": room.get("id"), "name": room.get("name"),
-                      "area_m2": round(polygon.area / 1e6, 3),
+                      "area_m2": round(measured["area_m2"], 3),
+                      "basis": "Supplied room polygon; no additional deductions", "unit_mm": 1,
                       "type": room.get("type", "interior"), "level": room.get("level")})
     overlaps = []
     for i, left in enumerate(polygons):
@@ -27,15 +30,18 @@ def brief(project: Project, out: Path):
               "interior_net_area_m2": sum(a["area_m2"] for a in areas if a["type"] == "interior"),
               "courtyard_area_m2": sum(a["area_m2"] for a in areas if a["type"] == "courtyard"),
               "overlaps": overlaps, "brief": project.brief, "sources": project.sources}
+    report["interior_boundary_area_m2"] = report["interior_net_area_m2"]
+    report["compatibility_fields"] = {
+        "interior_net_area_m2": "Legacy alias for interior_boundary_area_m2; no net-area deductions implied"}
     out.mkdir(parents=True, exist_ok=True)
     write_json(out / "brief.json", report)
     lines = [f"# {project.name}", "", project.subtitle, "", "## Design constraints", ""]
     for key, value in project.brief.items():
         lines.append(f"- **{key}**: {value}")
-    lines += ["", "## Measured net room areas", "", "| Space | Type | Area m² |", "|---|---|---:|"]
+    lines += ["", "## Supplied boundary areas", "", "| Space | Type | Area m² |", "|---|---|---:|"]
     lines += [f"| {a['name']} | {a['type']} | {a['area_m2']:.2f} |" for a in areas]
-    lines += ["", f"Interior net area: {report['interior_net_area_m2']:.2f} m².",
-              "Area figures derive from the room polygons; they are not gross building area.", ""]
+    lines += ["", f"Sum of interior boundary areas: {report['interior_boundary_area_m2']:.2f} m².",
+              "Areas derive from supplied polygons without additional deductions; not certified net or gross area.", ""]
     (out / "brief.md").write_text("\n".join(lines), encoding="utf-8")
     if overlaps:
         raise ValueError("Room polygons overlap; inspect brief.json before proceeding")

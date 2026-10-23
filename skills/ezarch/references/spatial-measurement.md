@@ -4,6 +4,8 @@
 
 ## Python 助手
 
+所选边界面积、显式扣除与覆盖几何见 [面积与区域](area-regions.md)；实际端点和投影跨度见 [尺寸与字体](text-dimensions.md)。这些入口不要求房间 schema，也不判断净宽、可达性或空间用途。
+
 - `ezarch.analysis.check_clearances(zones, obstacles, rooms=None)`：检查指定使用区与同层障碍物的相交；使用区指定 `room` 时另需传入对应房间边界以计算越界面积。只检查传入对象，不发现遗漏的空间或法规条件。
 - `swing_envelope(hinge, radius_mm, closed_angle_deg, opening_angle_deg=90)`：铰链门扫掠多边形，可供净空检查；滑动门需另用其运动几何。角度和半径对应实际门扇。
 - `oriented_footprint(size_mm, position_mm, rotation_z_deg)`：旋转矩形外廓。它是保守包围盒，不是精确家具轮廓或人的使用区。

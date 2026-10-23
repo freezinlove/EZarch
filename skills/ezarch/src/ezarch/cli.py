@@ -33,12 +33,13 @@ def main(argv=None):
         command.add_argument("--out", type=Path, required=True)
         if name in ("draft", "views"):
             command.add_argument("--only", nargs="+")
-        if name in ("model", "draft", "views", "board"):
+        if name in ("model", "draft", "views", "board", "diagram"):
             command.add_argument("--formats", nargs="+")
         if name == "audit":
             command.add_argument("--outputs", type=Path, help="Outputs directory for optional project comparison")
         if name == "diagram":
             command.add_argument("--level")
+            command.add_argument("--kinds", nargs="+", choices=["program", "circulation", "solid-void", "areas"])
         if name == "render":
             command.add_argument("--source-units", choices=["mm", "m"])
             command.add_argument("--camera", default=None)
@@ -87,7 +88,8 @@ def main(argv=None):
                 args.input, args.out, args.known_mm, args.pixel_distance)
         elif args.module == "diagram":
             from .diagrams import generate_diagrams
-            result = generate_diagrams(read_project(args.input), args.out, args.level)
+            result = generate_diagrams(read_project(args.input), args.out, args.level,
+                                       kinds=args.kinds, formats=args.formats)
         elif args.module == "render":
             from .render import render
             result = render(args.input, args.out, args.camera, args.quality, args.width, args.samples, args.source_units,

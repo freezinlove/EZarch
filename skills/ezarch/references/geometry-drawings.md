@@ -37,7 +37,7 @@
 `Drawing.from_layout(layout, *, scale, unit_mm, style=None, text_style="Standard", dimstyle="Standard", resource_policy="rename")` 接收已附属文档的 ezdxf modelspace、paperspace 或 block。支持 DXF R2000 及以上；绑定不新建文档、不改变源单位或视口、不创建 Canvas，不要求完整项目数据。
 
 - 几何点和半径使用目标自身坐标；`unit_mm` 是每目标单位的 mm 数，`scale` 是物理比例分母。纸面字高与符号尺寸乘 `scale / unit_mm` 后写入目标。不从 doc.units 猜测纸空间或图块单位；这两个参数由调用者按目标提供。
-- `dimension/chain` 仍仅支持目标坐标中的水平/竖直尺寸；显示值和 `dimensions[].measured_mm` 按 mm，原生实测值仍是目标单位。尺寸样式长度按纸面 mm 解释，单个尺寸的 `dimscale` 按 `scale / unit_mm` 设置，避免既有全局缩放再次放大字高或遗漏文字间隙；源样式不变。`level` 的 `value_mm` 仍为 mm。其他单位标注与斜向尺寸可用原生接口。
+- `dimension` 支持端点对齐及显式方向的投影尺寸，包含斜向；`chain` 保持旧正交链行为。显示值和 `dimensions[].measured_mm` 按 mm，原生实测值仍是目标单位。尺寸样式长度按纸面 mm 解释，单个尺寸的 `dimscale` 按 `scale / unit_mm` 设置，避免既有全局缩放再次放大字高或遗漏文字间隙；源样式不变。方向、精度、人工覆盖及端点依据见 [尺寸与字体](text-dimensions.md#端点与原生尺寸)。`level` 的 `value_mm` 仍为 mm，其他单位标注可用原生接口。
 - 新旧两种入口的绘制方法均返回本次新增的原生实体元组；`entities` 汇总该助手新增的目标实体，尺寸测量在 `dimensions`。尺寸的匿名图块等附属资源由 ezdxf 管理，不列入目标实体元组。返回对象可直接通过原生 API 调整。
 - `text_style`、`dimstyle` 使用源文档已有定义；缺失时报错，不自动替换字体。所需图层/线型在绘制时创建。图层 `rename` 为同名冲突另取名称；`reuse` 明确沿用现有定义，均不覆盖源定义。同名图层被冻结或采用不同线宽时，复用即保留其状态；显式 dash 按数组取得匹配线型。
 - `style` 仍可调整随库符号与笔宽默认值；颜色、线宽、虚线及孔洞参数见上文。返回原生实体可继续自由修改。

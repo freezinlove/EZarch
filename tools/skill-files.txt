@@ -23,6 +23,8 @@ references/editable-components.md
 references/wall-regions.md
 references/vertical-components.md
 references/grids-columns.md
+references/area-regions.md
+references/text-dimensions.md
 references/project-data.md
 references/public-assets.md
 references/rendering.md
@@ -49,6 +51,8 @@ src/ezarch/furniture.py
 src/ezarch/wall_regions.py
 src/ezarch/vertical_symbols.py
 src/ezarch/grids.py
+src/ezarch/measurements.py
+src/ezarch/fonts.py
 src/ezarch/_drawing.py
 src/ezarch/environment.py
 src/ezarch/exchange.py
