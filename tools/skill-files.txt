@@ -53,6 +53,8 @@ src/ezarch/vertical_symbols.py
 src/ezarch/grids.py
 src/ezarch/measurements.py
 src/ezarch/fonts.py
+src/ezarch/annotations.py
+src/ezarch/routing.py
 src/ezarch/_drawing.py
 src/ezarch/environment.py
 src/ezarch/exchange.py

@@ -30,6 +30,7 @@ description: Architectural design support and tools for reading, editing, drawin
 | 测量所选轮廓、定位几何疑点 | 只读区域有效性、短边、回折及精确重复检查；对象范围与裁图定位 | [几何观测与边界](references/geometry-diagnostics.md) |
 | 计算面积、覆盖或给选定区域填色 | 显式边界与扣除、重叠/留白位置、独立带孔填色 | [面积与区域](references/area-regions.md) |
 | 量取斜向尺寸、查找字体或测量文字 | 端点/投影跨度、原生尺寸；字体元数据、缺字及单行轮廓占位 | [尺寸与字体](references/text-dimensions.md) |
+| 定位标注占位关系，量局部净宽或查询所选目标连通 | 包络相交/间距候选、指定截面的区间、显式面域的点连通证据 | [标注占位](references/text-dimensions.md#标注占位观测)、[空间测量](references/spatial-measurement.md#局部截面与连接证据) |
 | 三维建模、节点、场景编辑 | bpy / BMesh；blender run / extract | [Blender 操作](references/blender-modeling.md) |
 | 从模型取得剖切、投影和可见线 | blender view 的可选网格出图助手 | [剖切与投影](references/geometry-drawings.md#blender-模型剖切与投影) |
 | 适用规范、纸面比例与技术符号 | 依据查询、可选中国制图样式 | [规范适用](references/standards.md)、[制图表达](references/chinese-drafting.md) |

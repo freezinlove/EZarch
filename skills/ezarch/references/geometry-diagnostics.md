@@ -2,6 +2,8 @@
 
 `ezarch.walls` 提供可独立调用的只读几何检查，`ezarch.diagnostics` 提供定位范围计算。用途是取得测量与可核查的疑点；不生成设计、修复对象或判断整图合格。调用哪些能力、如何解释和处理结果，由 AI 根据用户需求、设计意图和其他证据决定。也可使用原生 API、自写算法或其他工具。
 
+另有独立的 [标注占位观测](text-dimensions.md#标注占位观测) 和 [局部截面/点连通](spatial-measurement.md#局部截面与连接证据)，无需先运行本页检查。它们复用 location / issue_region，但保留各自的结果与范围；不是统一验收清单。`geometry_location(geometry, *, precision)` 可为其他非空有限二维观测生成坐标包围盒及代表点，precision 由调用者说明定位依据；不凭包围盒创建缺陷判断。含 Shapely 几何的结果按需转换后再序列化，本页 walls 返回字典的 JSON 特性不自动扩展到其他接口。
+
 ## 输入与入口
 
 `inspect_geometry(geometries, *, checks, unit_mm, short_edge_mm=None, reversal_deviation_deg=None, min_edge_mm=0, expected_ids=None)` 接受对象 ID 到 Shapely 几何的映射。ID 为非空字符串；支持 Polygon、MultiPolygon、LineString、LinearRing、MultiLineString 的有限二维直边坐标。输入不必代表墙，也不要求项目按这套映射组织。GeometryCollection、点、空几何、非有限坐标及 Z/M 几何会返回未检查原因。

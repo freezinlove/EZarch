@@ -5,11 +5,12 @@ import math
 from copy import deepcopy
 from itertools import combinations
 
-from shapely.geometry import Polygon
+from shapely.geometry import LineString, Point, Polygon
 from shapely.ops import unary_union
 
 from .frames import _finite
-from .wall_regions import _area_parts, _number, _region, _regions
+from .diagnostics import geometry_location
+from .wall_regions import _area_parts, _geometry, _number, _region, _regions
 
 
 def _area(geometry, unit_mm):
@@ -104,3 +105,57 @@ def measure_span(p1, p2, *, unit_mm, direction=None, source=None):
     return {"p1": p1, "p2": p2, "mode": mode, "direction": axis, "unit_mm": unit_mm,
             "measured_mm": abs(signed)*unit_mm, "signed_mm": signed*unit_mm,
             "endpoint_distance_mm": length*unit_mm, "source": deepcopy(source)}
+
+
+def measure_clear_width(region, section, *, unit_mm, obstacles=None, source=None):
+    """All interior intervals along an explicit finite straight section.
+
+    A span clipped by a section endpoint inside free space has unknown full
+    width (width_mm=None), while span_mm records its observed length. Section
+    direction is not inferred to be perpendicular to a passage. No global
+    minimum, human-body clearance, code threshold or automatic point selection.
+    """
+    region = _region(region, empty=True)
+    section = _geometry(section, {"LineString"}, "section")
+    if len(section.coords) != 2 or section.length == 0:
+        raise ValueError("section requires exactly two distinct endpoints")
+    unit_mm = _number(unit_mm, "unit_mm", positive=True)
+    obstacles = _regions({} if obstacles is None else obstacles, "obstacles")
+    masks = unary_union(list(obstacles.values())) if obstacles else Polygon()
+    free = _region(region.difference(masks), "free space", empty=True)
+    # One overlay preserves boundary nodes. Subtracting the boundary a second
+    # time can manufacture microscopic intervals after rotated intersections.
+    boundary_contact = section.intersection(free.boundary)
+    observed = section.intersection(free)
+
+    def lines(geometry):
+        if geometry.geom_type == "LineString":
+            yield geometry
+        elif hasattr(geometry, "geoms"):
+            for part in geometry.geoms:
+                yield from lines(part)
+
+    spans = []
+    for line in lines(observed):
+        if line.length == 0 or not line.relate_pattern(free, "1********"):
+            continue
+        endpoints = sorted((tuple(line.coords[0]), tuple(line.coords[-1])), key=lambda p: section.project(Point(p)))
+        start, end = endpoints
+        clipped = tuple(p in section.coords and free.contains(Point(p)) for p in endpoints)
+        span_mm = math.dist(start, end)*unit_mm
+        stations = tuple(section.project(Point(p))*unit_mm for p in endpoints)
+        if not all(math.isfinite(v) for v in (span_mm, *stations)):
+            raise ValueError("Section span exceeds representable range")
+        spans.append({"start": start, "end": end, "span_mm": span_mm,
+                      "width_mm": None if any(clipped) else span_mm, "truncated": clipped,
+                      "stations_mm": stations, "geometry": LineString(endpoints),
+                      "location": geometry_location(line, precision="section_interval")})
+    spans.sort(key=lambda span: span["stations_mm"][0])
+    return {"intervals": spans, "region": region, "section": section, "free_space": free,
+            "boundary_contact": boundary_contact, "obstacles": obstacles, "unit_mm": unit_mm,
+            "obstacle_contacts": {key: section.intersection(mask) for key, mask in obstacles.items()},
+            "observation": "intervals" if spans else "no_interior_interval" if not free.is_empty else "empty_free_space",
+            "source": deepcopy(source), "scope": "Interior intervals on the supplied finite section only",
+            "not_checked": ["section direction and position suitability", "global minimum or passage width",
+                            "accuracy or completeness of selected surfaces and obstacles",
+                            "human use, reachability and regulatory compliance"]}

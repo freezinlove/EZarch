@@ -2,6 +2,43 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
+
+
+def _id_mapping(values, name):
+    if not isinstance(values, Mapping):
+        raise TypeError(f"{name} must map nonempty string IDs to values")
+    result = dict(values)
+    if any(not isinstance(key, str) or not key for key in result):
+        raise ValueError(f"{name} requires nonempty string IDs")
+    return result
+
+
+def _expected_ids(values, name):
+    if values is None:
+        return None
+    if isinstance(values, str):
+        raise TypeError(f"{name} must be a collection of IDs, not one string")
+    values = tuple(values)
+    if any(not isinstance(key, str) or not key for key in values) or len(set(values)) != len(values):
+        raise ValueError(f"{name} requires distinct nonempty string IDs")
+    return values
+
+
+def geometry_location(geometry, *, precision):
+    """Locate supplied observation geometry, without claiming a physical defect.
+
+    Empty/invalid/nonfinite observations cannot furnish a crop. Coordinates and
+    precision describe the caller's evidence, not its architectural meaning.
+    """
+    from .wall_regions import _geometry
+
+    _geometry(geometry, {"Point", "MultiPoint", "LineString", "LinearRing", "MultiLineString",
+                         "Polygon", "MultiPolygon", "GeometryCollection"}, "location")
+    if not isinstance(precision, str) or not precision:
+        raise ValueError("precision must describe the observation location")
+    point = geometry.representative_point()
+    return {"bounds": tuple(geometry.bounds), "points": [(point.x, point.y)], "precision": precision}
 
 
 def issue_region(finding: dict, *, padding: float) -> tuple[float, float, float, float]:
