@@ -4,13 +4,13 @@
 
 ## 几何、表达与目标文档
 
-`Symbol` 保存局部 mm 的原生 `parts`；每项有 `entity`、`role` 和是否为填充的 `fill`。保留 LINE、带 bulge 的 LWPOLYLINE、ARC、CIRCLE、ELLIPSE、实心 HATCH。`path/rect/line/segment/ellipse` 可独立构造几何，`add(entity, role, fill=...)` 复制单个原生图元。自定义输入应是有限 XY 平面几何；该入口不导入复杂块、字体或外部资源。其他对象可直接使用 ezdxf 导入或绘制。
+`Symbol` 保存局部 mm 的原生 `parts`；每项有 `entity`、`role` 和是否为填充的 `fill`。保留 LINE、带 bulge 的 LWPOLYLINE、ARC、CIRCLE、ELLIPSE、实心 HATCH。`path/rect/line/segment/ellipse` 可独立构造几何，`polygon(outer, holes=(), role="outline", fill=None)` 提供直边外环和真实孔洞，`add(entity, role, fill=...)` 复制单个原生图元。自定义输入应是有限 XY 平面几何；该入口不导入复杂块、字体或外部资源。其他对象可直接使用 ezdxf 导入或绘制。
 
-`place_symbol(symbol, layout, *, style, unit_mm, origin=(0,0), rotation_deg=0, mirror_x=False, layer="0")` 将组件复制到已有 modelspace、paperspace 或 block：
+`place_symbol(symbol, layout, *, style, unit_mm, origin=(0,0), rotation_deg=0, mirror_x=False, layer="0", role_layers=None, role_linetypes=None)` 将组件复制到已有 modelspace、paperspace 或 block：
 
 - 几何使用局部 mm，`unit_mm` 是每目标单位的 mm 数；`origin` 使用目标坐标。局部原点先放在指定位置，方向由局部 X 取反的镜像和逆时针旋转确定；镜像在旋转之前。没有任意拉伸，也不从图纸单位猜测纸空间或块内单位。
-- 需要 R2004+ 以保存真彩色。目标图层须已存在，原定义、可见性和既有对象均不覆盖；新实体使用显式颜色、纸面线宽和连续线型。被冻结的图层仍冻结。没有自动保存、出图或把生成内容登记到项目模型。
-- 返回 `Placement.entities` 原生可编辑实体、目标坐标的 `anchors`、四角 `nominal_envelope` 和可交给 [frames](coordinate-transforms.md) 的二维仿射 `transform`。可以自行放进块，再用原生 INSERT 复用。
+- 需要 R2004+ 以保存真彩色。目标图层须已存在，原定义、可见性和既有对象均不覆盖；新实体使用显式颜色、纸面线宽和连续线型。`role_layers/role_linetypes` 可把实际使用的角色映射到已有图层/线型，缺失资源报错且不写入部分实体。线型长度沿用目标文档单位和原生比例设置，不自动换算纸面虚线；被冻结的图层仍冻结。没有自动保存、出图或把生成内容登记到项目模型。
+- 返回 `Placement.entities` 原生可编辑实体、逐实体对应的 `roles`、目标坐标的 `anchors`、四角 `nominal_envelope` 和可交给 [frames](coordinate-transforms.md) 的二维仿射 `transform`。可以自行放进块，再用原生 INSERT 复用。
 - `Symbol.nominal_bounds` 是尺寸包络；家具不一定填满它，门扇、门框、窗台线也可能伸出门窗名义跨度。`geometry_bounds()` 是原生轮廓的轴向范围，椭圆范围沿用 ezdxf 的曲线近似。**两者都不是精确占地区域或合规净距**；真实轮廓保留在返回的曲线中。
 - 直接编辑原生实体后，构造时的锚点和尺寸元数据不会自动更新。调用者可改元数据、重新构造或自行测量。原有 `Drawing.furniture` 保留兼容行为；这里不自动同步 Drawing 的 Canvas。
 
@@ -19,6 +19,8 @@
 `color_style()` 返回历史住宅家具采用的柔和色板；`linework_style(outline_mm=.18, detail_mm=.09, seam_mm=.05, glass_mm=.13)` 返回真黑线条、无填充的表达。两者都返回可修改的 `SymbolStyle(strokes, fills)`：`strokes` 按角色映射 `(RGB, 纸面线宽mm)`，`fills` 按材质角色映射 RGB。空 `fills` 跳过所有 HATCH，非空映射需覆盖用到的填充角色；描边角色缺失会报错。颜色接受 `#RRGGBB` 或 0..1 RGB 三元组，线宽须能用 DXF 有限档位准确表达。
 
 同一个 `Symbol` 可以用不同表达放置，曲线、尺寸、零部件和位置计算不变；线稿不生成灰面，也不通过重新画一套家具改变几何。这两份表达可以更改或替换，不要求输出两种，不限定最终色彩或视觉深度。黑白线稿保留所有原轮廓，因此原先被填色遮住的交叠线可能显露；它不等同自动消隐的施工详图。实体角色可分别调整，若需要消隐或删线可针对实际几何另做，不把表达切换暗中变成几何改写。
+
+同一底层接口也可承接 [墙面区域](wall-regions.md) 与 [楼梯、电梯局部资源](vertical-components.md)。`polygon_symbol(geometry, unit_mm=..., role="outline", fill=None)` 把给定单位的直边区域转成局部 mm，保留绝对数值关系、不自动归零；细节见墙面参考。自定义角色可扩充 `SymbolStyle`，现有色板不定义所有角色或建筑表达。
 
 ## 门窗接口
 

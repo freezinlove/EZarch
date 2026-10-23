@@ -23,6 +23,8 @@ description: Architectural design support and tools for reading, editing, drawin
 | 修改已有 CAD、3DM、SVG 或 BLEND | edit、ezdxf、rhino3dm、XML/DOM、bpy | [原生操作与连续修改](references/edit-existing.md) |
 | 绘制二维图纸、尺寸与符号 | Drawing 新建或绑定已有 DXF；可调绘图属性、孔洞和文字定位；ezdxf | [几何与图纸](references/geometry-drawings.md) |
 | 取用门窗、家具几何及不同表达 | 可编辑曲线组件；独立放置；同一几何的可调彩色与纯黑白线稿 | [组件与表达资源](references/editable-components.md) |
+| 生成所选墙面或显式开洞 | 路径加厚、边界墙带、区域合并/裁剪/扣除；原生轮廓与填充适配 | [墙面与洞口](references/wall-regions.md) |
+| 取用楼梯与电梯的局部几何 | 独立梯段、折断线、方向标记；参数化井壁、轿厢与门板 | [楼梯与电梯资源](references/vertical-components.md) |
 | 转换二维坐标、方向或纸面位置 | 独立仿射计算、逆变换与 Shapely 适配 | [坐标计算](references/coordinate-transforms.md) |
 | 测量所选轮廓、定位几何疑点 | 只读区域有效性、短边、回折及精确重复检查；对象范围与裁图定位 | [几何观测与边界](references/geometry-diagnostics.md) |
 | 三维建模、节点、场景编辑 | bpy / BMesh；blender run / extract | [Blender 操作](references/blender-modeling.md) |

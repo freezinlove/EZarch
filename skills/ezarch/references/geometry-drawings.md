@@ -8,6 +8,8 @@
 
 门框、门扇、开启弧、窗框分格及家具的可编辑几何见 [组件与表达资源](editable-components.md)。生成、表达和放置可分开使用，原生曲线可直接修改；不自动切墙、配家具、标注或规定输出样式。
 
+所选路径或边界生成墙面、区域合并与显式开洞见 [墙面与洞口](wall-regions.md)；梯段、折断线、方向标记及电梯局部几何见 [楼梯与电梯资源](vertical-components.md)。这些入口彼此独立，不要求按某个顺序调用。
+
 `ezarch.drafting.Drawing(bounds, scale=100, title="", number="", margin=12, *, style=None, font=None)` 新建文档，可输出 DXF/PDF/SVG/PNG。bounds、物体坐标以模型 mm 输入；scale 为比例分母，文字和笔宽用纸面 mm。方法包括 poly、text、axis、dimension、chain、level、north、section_mark、index、leader、furniture；签名见 [drafting.py](../src/ezarch/drafting.py)。默认不添加图框或比例尺。样式、字体和组合由任务决定。
 
 带文字/形状的复杂线型、块、斜向/径向尺寸等可直接用 ezdxf；修改已有 CAD 可保留原图层、块、布局和样式。见 [中国制图](chinese-drafting.md) 与 [连续修改](edit-existing.md)。

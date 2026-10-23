@@ -13,7 +13,7 @@ from ezdxf import bbox
 from ezdxf.lldxf.const import VALID_DXF_LINEWEIGHTS
 from ezdxf.math import Matrix44
 
-from ._drawing import css_color, paper_width
+from ._drawing import css_color, paper_width, polygon_rings
 from .frames import _finite, transform_points
 
 
@@ -131,6 +131,20 @@ class Symbol:
             points = [(left, bottom), (right, bottom), (right, top), (left, top)]
         return self.path(points, role, True, fill)
 
+    def polygon(self, outer, *, holes=(), role="outline", fill=None):
+        """Straight closed rings with optional true holes; no topology repair."""
+        outer, holes = polygon_rings(outer, holes, True, "#000000")
+        if fill:
+            hatch = self._layout.add_hatch()
+            hatch.paths.add_polyline_path(outer, is_closed=True, flags=1)
+            for ring in holes:
+                hatch.paths.add_polyline_path(ring, is_closed=True, flags=16)
+            self.add(hatch, fill, fill=True)
+            self._layout.delete_entity(hatch)
+        if role:
+            for ring in (outer, *holes):
+                self.path(ring, role, closed=True)
+
     def line(self, points, role="detail"):
         return self.path(points, role)
 
@@ -172,15 +186,18 @@ class Placement:
     anchors: dict
     nominal_envelope: tuple | None
     transform: tuple
+    roles: tuple = ()
 
 
 def place_symbol(symbol, layout, *, style, unit_mm, origin=(0, 0), rotation_deg=0,
-                 mirror_x=False, layer="0"):
+                 mirror_x=False, layer="0", role_layers=None, role_linetypes=None):
     """Copy local-mm geometry to an existing R2004+ layout/block, without exporting.
 
     origin is in target units; unit_mm is mm per target unit. Mirror negates local
     X before counterclockwise rotation. No nonuniform stretch or layout inference.
     Existing layer definitions are reused unchanged, including visibility state.
+    Optional role mappings select existing layers/linetypes without redefining
+    them. Linetype lengths/scales retain native target-document semantics.
     """
     if layout.doc is None or layout.doc.dxfversion < "AC1018":
         raise ValueError("RGB component placement requires an attached R2004+ layout")
@@ -203,7 +220,9 @@ def place_symbol(symbol, layout, *, style, unit_mm, origin=(0, 0), rotation_deg=
         envelope = tuple(transform_points([(left, bottom), (right, bottom),
                                            (right, top), (left, top)], transform))
     # Complete validation/copy/transform before attaching anything to the target.
-    entities = []
+    role_layers = {} if role_layers is None else dict(role_layers)
+    role_linetypes = {} if role_linetypes is None else dict(role_linetypes)
+    entities, roles = [], []
     for part in symbol.parts:
         if part.fill and not style.fills:
             continue
@@ -218,18 +237,45 @@ def place_symbol(symbol, layout, *, style, unit_mm, origin=(0, 0), rotation_deg=
         weight = round(width*100)
         if weight not in VALID_DXF_LINEWEIGHTS or not math.isclose(weight/100, width, abs_tol=1e-9):
             raise ValueError(f"Unsupported DXF paper line width: {width} mm")
+        target_layer = role_layers.get(part.role, layer)
+        linetype = role_linetypes.get(part.role, "CONTINUOUS")
+        if target_layer not in layout.doc.layers or linetype not in layout.doc.linetypes:
+            raise ValueError(f"Role {part.role!r} requires existing layer {target_layer!r} and linetype {linetype!r}")
         entity = part.entity.copy()
         entity.transform(matrix)
-        entity.dxf.layer = layer
+        entity.dxf.layer = target_layer
         entity.dxf.color = 7
         entity.dxf.true_color = int(color[1:], 16)
         entity.dxf.lineweight = weight
-        entity.dxf.linetype = "CONTINUOUS"
+        entity.dxf.linetype = linetype
         entity.dxf.discard("transparency")
         entities.append(entity)
+        roles.append(part.role)
     for entity in entities:
         layout.add_entity(entity)
-    return Placement(tuple(entities), anchors, envelope, transform)
+    return Placement(tuple(entities), anchors, envelope, transform, tuple(roles))
+
+
+def polygon_symbol(geometry, *, unit_mm, role="outline", fill=None):
+    """Adapt selected valid straight Polygon/MultiPolygon geometry into a Symbol.
+
+    Coordinates are multiplied by unit_mm, without automatic recentering. Empty
+    polygon results produce an empty Symbol; caller chooses storage/placement.
+    """
+    from .wall_regions import _region
+
+    geometry = _region(geometry, empty=True)
+    unit_mm = _positive(unit_mm, "unit_mm")
+    if geometry.is_empty:
+        return Symbol()
+    symbol = Symbol(nominal_bounds=tuple(value*unit_mm for value in geometry.bounds))
+    parts = (geometry,) if geometry.geom_type == "Polygon" else geometry.geoms
+    for part in parts:
+        def coordinates(ring):
+            return [(x*unit_mm, y*unit_mm) for x, y in ring.coords]
+        symbol.polygon(coordinates(part.exterior), holes=[coordinates(r) for r in part.interiors],
+                       role=role, fill=fill)
+    return symbol
 
 
 def door_symbol(width, *, leaf_thickness, frame_width, frame_depth, opening_angle_deg=90,
