@@ -34,10 +34,12 @@ def rgb(value):
 class Canvas:
     """Page coordinates: x right, y down, sizes in mm; text y is the baseline."""
 
-    def __init__(self, width, height, background="#ffffff", font=None):
+    def __init__(self, width, height, background="#ffffff", font=None, *, font_roles=None):
         self.width, self.height = float(width), float(height)
         self.custom_font = font is not None
         self.font_path = Path(font) if font is not None else skill_root() / "assets/fonts/EZarchFang.ttf"
+        from .fonts import font_roles as resolve_roles
+        self.font_roles = resolve_roles(font_roles or {})
         self.items = []
         self.rect(0, 0, width, height, fill=background, stroke=None)
 
@@ -61,20 +63,24 @@ class Canvas:
                                width=paper_width(width), fill=css_color(fill), dash=dash_pattern(dash), tag=tag))
 
     def text(self, x, y, text, size=3.0, color="#30332f", align="left", bold=False, tag="", rotation=0,
-             *, valign="baseline", size_mode="em"):
+             *, valign="baseline", size_mode="em", font=None, font_role=None, fallbacks=()):
         (x, y), = points_2d([(x, y)])
         if not math.isfinite(rotation) or not math.isfinite(size) or size <= 0:
             raise ValueError("Text rotation must be finite and size positive")
         if align not in {"left", "center", "right"} or valign not in {"baseline", "middle"}:
             raise ValueError("Text align: left/center/right; valign: baseline/middle")
-        if size_mode not in {"em", "cap"} or (size_mode == "cap" and not self.custom_font):
+        if font is not None and font_role is not None:
+            raise ValueError("Choose font or font_role")
+        if font_role is not None:
+            font = self.font_roles[font_role]
+        if size_mode not in {"em", "cap"} or (size_mode == "cap" and not (self.custom_font or font)):
             raise ValueError("Cap-height sizing requires an explicit Canvas font")
         color = css_color(color)
         if color is None:
             raise ValueError("Text requires a color")
         self.items.append(dict(kind="text", x=x, y=y, text=str(text), size=size, color=color,
                                align=align, bold=bold, tag=tag, rotation=rotation, valign=valign,
-                               size_mode=size_mode))
+                               size_mode=size_mode, font=font, fallbacks=tuple(fallbacks)))
 
     def image(self, path, x, y, w, h):
         self.items.append(dict(kind="image", path=str(Path(path).resolve()), x=x, y=y, w=w, h=h))
@@ -104,12 +110,21 @@ class Canvas:
     def text_box(self, x, y, w, h, text, size=3, leading=None, **kwargs):
         """Measured wrapping for mixed CJK/Latin text; reject overflow, never shrink."""
         leading = leading or size * 1.55
-        font = fitz.Font(fontfile=str(self.font_path))
+        from .fonts import font_bytes
+        selected = kwargs.get("font") or self.font_roles.get(kwargs.get("font_role"))
+        font = fitz.Font(fontbuffer=font_bytes(selected)) if selected else fitz.Font(fontfile=str(self.font_path))
+        fallbacks = [fitz.Font(fontbuffer=font_bytes(face)) for face in kwargs.get("fallbacks", ())]
         latin = fitz.Font("hebo" if kwargs.get("bold") else "helv")
         def width(value):
-            primary = font if self.custom_font or any(ord(c) > 255 for c in value) else latin
-            return sum((primary if primary.has_glyph(ord(c)) else latin)
-                       .text_length(c, fontsize=size) for c in value)
+            primary = font if selected or self.custom_font or any(ord(c) > 255 for c in value) else latin
+            total = 0
+            for char in value:
+                candidates = [primary, *fallbacks] + ([] if selected else [latin])
+                face = next((f for f in candidates if f.has_glyph(ord(char))), None)
+                if face is None:
+                    raise ValueError(f"No selected font glyph for {char!r}")
+                total += face.text_length(char, fontsize=size)
+            return total
         lines = []
         for paragraph in str(text).split("\n"):
             line = ""
@@ -133,11 +148,26 @@ class Canvas:
             self.text(x, y + size + i * leading, line, size=size, **kwargs)
         return {"lines": len(lines), "used_height_mm": used}
 
+    def rich_text(self, x, y, w, h, markup, *, css="", fonts=None, scale_low=1):
+        """Shaped HTML text via MuPDF Story; explicit fit range, PDF text remains text."""
+        if min(w, h) <= 0 or not 0 < scale_low <= 1:
+            raise ValueError("Positive box and 0 < scale_low <= 1 required")
+        self.items.append(dict(kind="rich_text", x=x, y=y, w=w, h=h, markup=markup,
+                               css=css, fonts=fonts or {}, scale_low=scale_low))
+
+    def svg(self, path, x, y, w, h):
+        """Import SVG as a vector PDF view; embedded text is outlined in composed SVG."""
+        with fitz.open(path) as source:
+            content = source.convert_to_pdf()
+        self.items.append(dict(kind="pdf", content=content, x=x, y=y, w=w, h=h, page=0))
+
     def pdf(self, path, x, y, w, h, page=0):
         self.items.append(dict(kind="pdf", path=str(Path(path).resolve()), x=x, y=y, w=w, h=h,
                                page=page))
 
-    def save(self, stem: Path, dpi=120, metadata=None, formats=None):
+    def save(self, stem: Path, dpi=120, metadata=None, formats=None, *, svg_text="editable"):
+        if svg_text not in {"editable", "outline"}:
+            raise ValueError("svg_text: editable or outline")
         formats = set(["svg", "pdf", "png"] if formats is None else formats)
         if formats - {"svg", "pdf", "png"}:
             raise ValueError("Canvas formats: svg, pdf, png")
@@ -163,13 +193,54 @@ class Canvas:
             mime = 'font/otf' if font_path.suffix.lower() == '.otf' else 'font/ttf'
             svg.append('<defs><style>@font-face{font-family:FandolFang;src:url(data:' + mime + ';base64,'
                        + encoded + ')}</style></defs>')
-        overflow, geometry_overflow = [], []
+        registered_fonts = {}
+        svg_families = {"FangSong": "FandolFang", "EZLatin": "EZLatin", "EZBold": "EZBold"}
+        for name, builtin in (("EZLatin", regular_font), ("EZBold", bold_font)):
+            encoded = base64.b64encode(builtin.buffer).decode()
+            svg.append(f'<defs><style>@font-face{{font-family:{name};src:url(data:font/otf;base64,{encoded})}}</style></defs>')
+        def register_face(value):
+            from .fonts import _face, font_bytes
+            face = _face(value)
+            key = (str(face.path), face.index)
+            if key not in registered_fonts:
+                name = f"EZFace{len(registered_fonts)}"
+                data = font_bytes(face)
+                font = fitz.Font(fontbuffer=data)
+                page.insert_font(fontname=name, fontbuffer=data)
+                encoded = base64.b64encode(data).decode()
+                svg.append(f'<defs><style>@font-face{{font-family:{name};src:url(data:font/otf;base64,{encoded})}}</style></defs>')
+                svg_families[name] = name
+                registered_fonts[key] = (font, name)
+            return registered_fonts[key]
+        overflow, geometry_overflow, rich_text_runs = [], [], []
         # Batch adjacent paths: committing each triangle makes MuPDF rescan growing page streams.
         # Flush at text/media boundaries to preserve painter order.
         path_batch = None
         cad_views = []
         for item in self.items:
             k = item["kind"]
+            if k == "rich_text":
+                from .fonts import font_bytes
+                archive = fitz.Archive()
+                css = item["css"]
+                for index, (family, face) in enumerate(item["fonts"].items()):
+                    if not family.replace("_", "").replace("-", "").isalnum():
+                        raise ValueError("HTML font family keys must be simple identifiers")
+                    name = f"face{index}.otf"
+                    archive.add((font_bytes(face), name))
+                    css += f"\n@font-face{{font-family:{family};src:url({name});}}"
+                text_doc = fitz.open()
+                text_page = text_doc.new_page(width=item["w"] * PT, height=item["h"] * PT)
+                spare, actual_scale = text_page.insert_htmlbox(text_page.rect, item["markup"], css=css,
+                                                               archive=archive, scale_low=item["scale_low"])
+                if spare < 0:
+                    text_doc.close()
+                    raise ValueError("Rich text does not fit the supplied box and allowed scale")
+                rich_text_runs.append({"box_mm": [item[key] for key in ("x", "y", "w", "h")], "scale": actual_scale})
+                content = text_doc.tobytes()
+                text_doc.close()
+                item = dict(kind="pdf", content=content, page=0, **{key: item[key] for key in ("x", "y", "w", "h")})
+                k = "pdf"
             if k == "cad":
                 import ezdxf
 
@@ -244,21 +315,29 @@ class Canvas:
                                + f'"{attrs}/>')
             elif k == "text":
                 text = item["text"]
+                explicit_font = item.get("font")
                 cjk = self.custom_font or any(ord(c) > 255 for c in text)
                 font = cjk_font if cjk else bold_font if item["bold"] else regular_font
                 fontname = "FangSong" if cjk else "EZBold" if item["bold"] else "EZLatin"
+                if explicit_font is not None:
+                    font, fontname = register_face(explicit_font)
+                fallback_faces = [register_face(value) for value in item.get("fallbacks", ())]
                 size = item["size"]
                 cap, baseline = _cap_metrics(str(font_path)) if item["size_mode"] == "cap" else (1, 0)
                 if item["size_mode"] == "cap":
+                    if explicit_font is not None:
+                        from .fonts import cap_metrics
+                        cap, baseline = cap_metrics(explicit_font)
                     size /= cap
                 runs = []
                 for char in text:
-                    if font.has_glyph(ord(char)):
-                        run_font, run_name = font, fontname
-                    elif regular_font.has_glyph(ord(char)):
-                        run_font, run_name = regular_font, "EZLatin"
-                    else:
-                        raise ValueError(f"No bundled font glyph for {char!r} (U+{ord(char):04X}); choose an appropriate project font")
+                    candidates = [(font, fontname), *fallback_faces]
+                    if explicit_font is None:
+                        candidates.append((regular_font, "EZLatin"))
+                    candidate = next(((f, n) for f, n in candidates if f.has_glyph(ord(char))), None)
+                    if candidate is None:
+                        raise ValueError(f"No selected font glyph for {char!r} (U+{ord(char):04X}); supply a fallback")
+                    run_font, run_name = candidate
                     if runs and runs[-1][0] == run_name:
                         runs[-1][2] += char
                     else:
@@ -289,11 +368,10 @@ class Canvas:
                                             fitz.Matrix(item["rotation"])))
                     advance += run_font.text_length(run_text, fontsize=size)
                 anchor = {"left": "start", "center": "middle", "right": "end"}[item["align"]]
-                family = "FandolFang, Helvetica, Arial, serif" if cjk else "Helvetica, Arial, sans-serif"
+                spans = ''.join(f'<tspan font-family="{svg_families[name]}">{html.escape(value)}</tspan>' for name, _, value in runs)
                 svg.append(f'<text x="{anchor_x}" y="{anchor_y}" transform="rotate({-item["rotation"]} {anchor_x} {anchor_y})" font-size="{size}" '
-                           f'font-family="{family}" font-weight="{"bold" if item["bold"] else "normal"}" '
                            f'font-kerning="none" font-variant-ligatures="none" '
-                           f'text-anchor="{anchor}" fill="{item["color"]}">{html.escape(text)}</text>')
+                           f'text-anchor="{anchor}" fill="{item["color"]}">{spans}</text>')
             elif k in ("image", "pdf"):
                 rect = fitz.Rect(item["x"] * PT, item["y"] * PT,
                                  (item["x"] + item["w"]) * PT, (item["y"] + item["h"]) * PT)
@@ -326,7 +404,13 @@ class Canvas:
             path_batch.commit()
         svg.append("</svg>")
         if "svg" in formats:
-            stem.with_suffix(".svg").write_text("\n".join(svg), encoding="utf-8")
+            svg_content = "\n".join(svg)
+            if svg_text == "outline":
+                import re
+                svg_content = page.get_svg_image(text_as_path=True)
+                svg_content = re.sub(r'width="[^"]+"', f'width="{self.width}mm"', svg_content, count=1)
+                svg_content = re.sub(r'height="[^"]+"', f'height="{self.height}mm"', svg_content, count=1)
+            stem.with_suffix(".svg").write_text(svg_content, encoding="utf-8")
         doc.set_metadata({"title": (metadata or {}).get("title", stem.stem), "producer": "EZarch"})
         doc.subset_fonts()
         if "pdf" in formats:
@@ -336,7 +420,9 @@ class Canvas:
         report = {"width_mm": self.width, "height_mm": self.height, "text_overflow": overflow,
                   "geometry_overflow": geometry_overflow,
                   "vector_paths": len(page.get_drawings()), "images": len(page.get_images()),
-                  "metadata": metadata or {}, "formats": sorted(formats), "cad_views": cad_views}
+                  "metadata": metadata or {}, "formats": sorted(formats), "cad_views": cad_views,
+                  "svg_text": svg_text, "font_faces": [{"path": key[0], "index": key[1]} for key in registered_fonts],
+                  "rich_text": rich_text_runs}
         write_json(stem.with_suffix(".report.json"), report)
         doc.close()
         return report

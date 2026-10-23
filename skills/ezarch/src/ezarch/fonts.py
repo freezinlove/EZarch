@@ -119,6 +119,24 @@ def cap_metrics(font):
         return _cap_metrics(data)
 
 
+def font_bytes(font):
+    """Standalone selected face bytes, including a face from TTC/OTC. No installation."""
+    import io
+    face = _face(font)
+    with _open(face) as data:
+        output = io.BytesIO()
+        data.save(output)
+        return output.getvalue()
+
+
+def font_roles(mapping):
+    """Resolve arbitrary caller-named roles to real faces; no automatic role taxonomy."""
+    result = {str(name): _face(value) for name, value in mapping.items()}
+    for face in result.values():
+        font_info(face)
+    return result
+
+
 def measure_text(text, font, *, size_mm, fallbacks=(), origin=(0, 0), rotation=0,
                  align="left", valign="baseline", size_mode="em"):
     """Measure one unshaped horizontal line, in mm and Y-up coordinates.

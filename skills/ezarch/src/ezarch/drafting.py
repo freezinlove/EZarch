@@ -264,7 +264,7 @@ class Drawing:
         self.entities.append(self.ms.add_circle(centre, radius, dxfattribs=attrs))
 
     @_draw_entities
-    def text(self, point, text, size=2.5, align="center", color="BYLAYER", rotation=0, layer="A-ANNOTATION"):
+    def text(self, point, text, size=2.5, align="center", color="BYLAYER", rotation=0, layer="A-ANNOTATION", *, font=None):
         point, = points_2d([point])
         if not math.isfinite(size) or size <= 0 or not math.isfinite(rotation):
             raise ValueError("Text size must be positive and rotation finite")
@@ -273,12 +273,28 @@ class Drawing:
         attrs, resolved = self._color(color, layer)
         if resolved is None:
             raise ValueError("Text requires a color or BYLAYER")
+        text_style = self.text_style
+        if font is not None:
+            import hashlib
+
+            from .fonts import font_info
+            font_path = Path(font).expanduser().resolve()
+            if font_path.suffix.lower() not in {".ttf", ".otf"}:
+                raise ValueError("Native DXF text requires a standalone TTF/OTF file; select/extract collection face explicitly")
+            info = font_info(font_path, text=str(text))
+            if info["missing_characters"]:
+                raise ValueError(f"Native text font missing glyphs: {info['missing_characters']}")
+            text_style = "EZFONT_" + hashlib.sha256(str(font_path).encode()).hexdigest()[:12]
+            if text_style not in self.doc.styles:
+                self.doc.styles.new(text_style, dxfattribs={"font": str(font_path)})
+            elif self.doc.styles.get(text_style).dxf.font != str(font_path):
+                raise ValueError("Font style resource name collision")
         if self.canvas is not None:
             self.canvas.text(*self.paper(point), text, size=size, align=align, color=resolved,
-                             rotation=rotation, valign="middle", size_mode="cap")
+                             rotation=rotation, valign="middle", size_mode="cap", font=font)
         alignment = {"left": TextEntityAlignment.MIDDLE_LEFT, "center": TextEntityAlignment.MIDDLE_CENTER,
                      "right": TextEntityAlignment.MIDDLE_RIGHT}[align]
-        entity = self.ms.add_text(str(text), dxfattribs={"height": size * self.scale, "style": self.text_style,
+        entity = self.ms.add_text(str(text), dxfattribs={"height": size * self.scale, "style": text_style,
                          "layer": self._layer(layer), "rotation": rotation, **attrs})
         entity.set_placement(point, align=alignment)
         self.entities.append(entity)

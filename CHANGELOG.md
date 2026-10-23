@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add editable route/direction, road-boundary and canopy primitives. Add per-text/role fonts, TTC face export, shaped HTML text boxes, SVG composition and explicit editable/outlined SVG text.
+
 - Add selected PDF page/crop exports, explicit vector-to-CAD mapping with unsupported clipping reported, affine control-point fitting, nested entity selection, temporary view styles, version-bound replacement and same-extent change previews.
 
 - Add release manifests, cached nonblocking update notices, optional background preparation, explicit safe activation/reload, local-change protection, rollback and interrupted-transaction recovery. Add tagged release packaging workflow.

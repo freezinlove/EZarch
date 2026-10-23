@@ -34,6 +34,7 @@ EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达
 | 构造墙面、开洞或处理区域 | [墙面与区域布尔操作](references/wall-regions.md) · [面积与填色](references/area-regions.md) |
 | 换算坐标、量取几何或文字 | [坐标变换](references/coordinate-transforms.md) · [长度与字体](references/text-dimensions.md) · [局部截面与包络](references/spatial-measurement.md) |
 | 建模、剖切、投影或渲染 | [Blender / bpy](references/blender-modeling.md) · [模型出图](references/geometry-drawings.md#blender-模型剖切与投影) · [渲染与图像](references/rendering.md) |
+| 绘制流线与场地图元、指定字体和文字表达 | [场地资源与字体排版](references/site-typography.md) |
 | 制作 SVG、分析图或版面 | [Canvas 与矢量排版](references/diagrams-boards.md) · [地图、太阳与影长](references/site-analysis.md) |
 | 看清实际结果、继续修改 | [视图选择与视觉判断](references/viewing-editing.md) |
 | 采用制图规范或查找技术依据 | [制图表达](references/chinese-drafting.md) · [规范适用](references/standards.md) |
