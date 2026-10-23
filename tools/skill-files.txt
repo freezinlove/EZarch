@@ -22,6 +22,7 @@ references/geometry-diagnostics.md
 references/editable-components.md
 references/wall-regions.md
 references/vertical-components.md
+references/grids-columns.md
 references/project-data.md
 references/public-assets.md
 references/rendering.md
@@ -47,6 +48,7 @@ src/ezarch/symbols.py
 src/ezarch/furniture.py
 src/ezarch/wall_regions.py
 src/ezarch/vertical_symbols.py
+src/ezarch/grids.py
 src/ezarch/_drawing.py
 src/ezarch/environment.py
 src/ezarch/exchange.py

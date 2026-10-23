@@ -278,6 +278,27 @@ def polygon_symbol(geometry, *, unit_mm, role="outline", fill=None):
     return symbol
 
 
+def rectangular_column_symbol(width, depth, *, fill=None):
+    """Centered rectangular section in local mm; no sizing or placement policy.
+
+    Square sections use equal dimensions. Other profiles can use polygon_symbol
+    or native primitives directly; these factories are not a section catalogue.
+    """
+    width, depth = _positive(width, "width"), _positive(depth, "depth")
+    symbol = Symbol(nominal_bounds=(-width/2, -depth/2, width/2, depth/2),
+                    anchors={"center": (0, 0)})
+    symbol.rect(symbol.nominal_bounds, fill=fill)
+    return symbol
+
+
+def circular_column_symbol(radius, *, fill=None):
+    """Centered native CIRCLE and optional circular HATCH, not a location mark."""
+    radius = _positive(radius, "radius")
+    symbol = Symbol(nominal_bounds=(-radius, -radius, radius, radius), anchors={"center": (0, 0)})
+    symbol.ellipse((0, 0), radius*2, radius*2, role="outline", fill=fill)
+    return symbol
+
+
 def door_symbol(width, *, leaf_thickness, frame_width, frame_depth, opening_angle_deg=90,
                 frame=True, leaf=True, swing=True):
     """Single leaf; hinge=(0,0), closed end=(width,0); width is not clear passage.

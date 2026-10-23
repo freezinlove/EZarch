@@ -22,6 +22,8 @@
 
 同一底层接口也可承接 [墙面区域](wall-regions.md) 与 [楼梯、电梯局部资源](vertical-components.md)。`polygon_symbol(geometry, unit_mm=..., role="outline", fill=None)` 把给定单位的直边区域转成局部 mm，保留绝对数值关系、不自动归零；细节见墙面参考。自定义角色可扩充 `SymbolStyle`，现有色板不定义所有角色或建筑表达。
 
+柱截面的居中矩形、原生圆及自定义轮廓入口见 [轴网与柱资源](grids-columns.md)。放置沿用本页接口，编号与轴线表达独立，不附带布柱策略。
+
 ## 门窗接口
 
 | 接口 | 几何参数与边界 |

@@ -43,7 +43,7 @@ GB/T 50104—2010 的目录另列图线与比例、图例、图样画法和尺�
 |---|---|
 | `poly / line / rect / circle` | 二维几何；`poly` 的闭合填充当前只有外环，复杂孔洞可用原生 HATCH。部分颜色、虚线和填充属性在 Canvas 与 DXF 中映射不同，见源码 |
 | `text` | 文字、纸面字高、对齐与旋转；实际字形及占位受所用字体影响 |
-| `axis` | 固定 x 或固定 y 的正交轴，`bubbles` 控制端部轴号圆；任意方向轴可由原生图元表达 |
+| `axis` | 既有方法为固定 x 或固定 y 的正交轴；独立 `grids.draw_axis/draw_axis_tag` 支持任意方向与显式轴号位置，见 [轴网与柱资源](grids-columns.md)。原生图元也可直接使用 |
 | `dimension / chain` | 水平或竖直尺寸，DXF 使用原生 DIMENSION；斜向尺寸使用 ezdxf 对应接口 |
 | `level` | 输入 `value_mm`，默认换算成 m 并保留三位小数；接近零显示 ±0.000，`label` 可指定显示文字 |
 | `north / section_mark / index / leader` | 北针旋转、剖切位置与方向、索引号及图号、引线及文字；对应关系由调用者传入 |
