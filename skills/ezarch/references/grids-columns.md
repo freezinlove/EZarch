@@ -2,6 +2,8 @@
 
 `ezarch.grids` 提供直线端部、轴线、轴号、偏轴和圆包络间距计算；`ezarch.symbols` 提供柱截面。位置、编号和截面由调用参数给出。
 
+墙柱交接、轴网定位与空间支承的专业关系见 [墙、柱与轴网的关系](wall-column-grid-relationships.md)。
+
 ## 截面与放置
 
 | 入口 | 几何含义 |
