@@ -12,6 +12,8 @@ assets/fonts/README
 assets/fonts/SOURCE.md
 pyproject.toml
 references/chinese-drafting.md
+references/plan-representation.md
+references/analysis-representation.md
 references/wall-column-grid-relationships.md
 references/door-window-representation.md
 references/stairs-and-lifts-representation.md

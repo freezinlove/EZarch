@@ -37,7 +37,7 @@ EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达
 
 | 所需能力 | 工具与相关知识 |
 |---|---|
-| 画线面、文字、尺寸与符号 | [Drawing](references/geometry-drawings.md)：新建 DXF 或绑定已有布局；[尺寸端点](references/text-dimensions.md#端点与原生尺寸)：对齐、投影与原生标注 |
+| 画线面、文字、尺寸与符号 | [Drawing](references/geometry-drawings.md)：新建 DXF 或绑定已有布局；[尺寸端点](references/text-dimensions.md#端点与原生尺寸)：对齐、投影与原生标注；[平面表达知识](references/plan-representation.md)：楼层、边界、入口与图纸用途 |
 | 画墙、交接与开洞 | [墙面区域](references/wall-regions.md)：路径加厚、布尔与切割；[墙柱关系知识](references/wall-column-grid-relationships.md) |
 | 画门窗、家具和设备 | [门窗](references/editable-components.md#门窗接口) · [家具](references/editable-components.md#家具接口与方向)：参数化局部几何与方向；[门窗表达知识](references/door-window-representation.md) · [家具与使用空间](references/furniture-spatial-relationships.md) |
 | 画楼梯、电梯、柱与轴网 | [楼梯与电梯](references/vertical-components.md) · [柱和轴线](references/grids-columns.md)；[楼梯电梯知识](references/stairs-and-lifts-representation.md) · [柱网关系知识](references/wall-column-grid-relationships.md) |
@@ -47,9 +47,9 @@ EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达
 
 ### 建模、图像与版面
 
-- **模型与剖切**：[Blender / bpy](references/blender-modeling.md) 提供脚本运行与模型操作；[模型出图](references/geometry-drawings.md#blender-模型剖切与投影) 输出可编辑投影；[剖切与投影知识](references/sections-and-projections.md) 解释建筑表达。
+- **模型与剖切**：[Blender / bpy](references/blender-modeling.md) 提供脚本运行与模型操作；[模型出图](references/geometry-drawings.md#blender-模型剖切与投影) 输出可编辑投影；[立面、剖切与投影知识](references/sections-and-projections.md) 解释建筑表达。
 - **渲染与素材**：[渲染和生成式图像](references/rendering.md)、[公开素材](references/public-assets.md)、[Blender 扩展](references/blender-ecosystem.md)。
-- **分析图与排版**：[Canvas / SVG / board](references/diagrams-boards.md) 接入几何、PDF、图片和文字；[字体与排版](references/typography.md) 说明选字形、富文本和可编辑性；[字体测量](references/text-dimensions.md#字体发现与字形依据) 返回字形信息与包络。
+- **分析图与排版**：[Canvas / SVG / board](references/diagrams-boards.md) 接入几何、PDF、图片和文字；[功能分区与交通流线知识](references/analysis-representation.md) 解释区域、路线与实际空间的对应；[字体与排版](references/typography.md) 说明选字形、富文本和可编辑性；[字体测量](references/text-dimensions.md#字体发现与字形依据) 返回字形信息与包络。
 
 ### 制图依据与视觉判断
 
