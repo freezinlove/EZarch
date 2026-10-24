@@ -111,10 +111,20 @@ def check(target, *, source=None, force=False, timeout=2, now=None):
     return result
 
 
-def prepare(target, release):
-    target, installed = identity(target)
-    if version(release['version']) <= version(installed['version']):
-        raise ValueError('Release is not newer than this installation')
+def fetch_release(source=SOURCE, *, timeout=5):
+    if not source.startswith(('https://', 'file://')):
+        raise ValueError('Release metadata must use HTTPS or explicit local fixture')
+    with urllib.request.urlopen(source, timeout=timeout) as response:
+        raw = response.read(1024 * 1024 + 1)
+    if len(raw) > 1024 * 1024:
+        raise ValueError('Release metadata exceeds 1 MiB')
+    result = json.loads(raw)
+    version(result['version'])
+    return result
+
+
+def _stage_release(release):
+    version(release['version'])
     if not re.fullmatch(r'[0-9a-f]{64}', release.get('sha256', '')):
         raise ValueError('Release requires SHA-256')
     if not release['url'].startswith(('https://', 'file://')):
@@ -150,6 +160,36 @@ def prepare(target, release):
             compile((stage / name).read_bytes(), name, 'exec')
     if not (stage / 'SKILL.md').is_file() or not (stage / 'pyproject.toml').is_file():
         raise ValueError('Package missing skill entry or metadata')
+    return root, stage
+
+
+def install_release(destination, release):
+    """First install into an unused location; keep unknown old installations untouched."""
+    from .storage import output_path
+    target = output_path(destination)
+    if target.exists():
+        raise FileExistsError('Choose an unused installation path; existing installation and contents are preserved')
+    _, stage = _stage_release(release)
+    with lock(state_path(target).with_suffix('.active.lock')):
+        if target.exists():
+            raise FileExistsError(target)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        temporary = target.with_name(target.name + '.install-' + uuid.uuid4().hex)
+        try:
+            shutil.copytree(stage, temporary)
+            os.replace(temporary, target)
+        finally:
+            if temporary.exists():
+                shutil.rmtree(temporary)
+    return {'state': 'installed_reload_required', 'target': str(target), 'version': release['version'],
+            'runtime': 'prepare dependencies or reuse a compatible registered environment'}
+
+
+def prepare(target, release):
+    target, installed = identity(target)
+    if version(release['version']) <= version(installed['version']):
+        raise ValueError('Release is not newer than this installation')
+    root, stage = _stage_release(release)
     atomic_json(root / 'prepared.json', {'target': str(target), 'stage': str(stage), 'version': release['version'],
                                         'from_version': installed['version']})
     return {'state': 'prepared', 'prepared': str(root / 'prepared.json'), 'version': release['version'],
@@ -195,6 +235,11 @@ def activate(target, prepared):
         for name in names:
             safe_name(name)
             destination = target / name
+            for component in (destination, *destination.parents):
+                if component == target:
+                    break
+                if component.is_symlink() or component.is_junction():
+                    raise ValueError(f'Local linked path preserved: {component}')
             if not destination.resolve().is_relative_to(target):
                 raise ValueError('Linked destination leaves installation')
             if name in new['files']:
@@ -248,7 +293,7 @@ def rollback(target, backup):
 def main(argv=None):
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('operation', choices=['check', 'prepare', 'activate', 'rollback', 'preferences', 'recover'])
+    parser.add_argument('operation', choices=['install', 'check', 'prepare', 'activate', 'rollback', 'preferences', 'recover'])
     parser.add_argument('target', type=Path)
     parser.add_argument('--source')
     parser.add_argument('--force', action='store_true')
@@ -258,7 +303,9 @@ def main(argv=None):
     parser.add_argument('--remind', action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument('--skip')
     a = parser.parse_args(argv)
-    if a.operation == 'preferences':
+    if a.operation == 'install':
+        result = install_release(a.target, fetch_release(a.source or SOURCE))
+    elif a.operation == 'preferences':
         result = preferences(a.target, auto=a.auto, remind=a.remind, skip=a.skip, source=a.source)
     elif a.operation == 'rollback':
         if not a.backup:

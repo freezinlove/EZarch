@@ -113,3 +113,34 @@ def test_active_task_blocks_update_then_rollback(releases):
     applied = updates.activate(target, ready['prepared'])
     updates.rollback(target, applied['backup'])
     assert updates.identity(target)[1]['version'] == '1.0.0'
+
+
+def test_interrupted_transaction_recovers_before_use(releases, tmp_path):
+    from ezarch.runtime import atomic_json
+    target, _, _ = releases
+    backup = tmp_path / 'backup'
+    backup.mkdir()
+    shutil.copy2(target / 'SKILL.md', backup / 'SKILL.md')
+    (target / 'SKILL.md').write_text('half-written update')
+    atomic_json(updates.state_path(target).with_suffix('.transaction.json'),
+                {'backup': str(backup), 'files': {'SKILL.md': True, 'temporary-added.py': False}})
+    (target / 'temporary-added.py').write_text('partial')
+    with pytest.raises(RuntimeError, match='Interrupted'):
+        with updates.usage(target):
+            pass
+    assert updates.recover(target)
+    assert (target / 'SKILL.md').read_text() == 'old content'
+    assert not (target / 'temporary-added.py').exists()
+    with updates.usage(target):
+        assert updates.identity(target)[1]['version'] == '1.0.0'
+
+
+def test_first_managed_install_never_overwrites_old_package(releases, tmp_path):
+    old, release, _ = releases
+    target = tmp_path / 'new-install'
+    result = updates.install_release(target, release)
+    assert result['state'] == 'installed_reload_required'
+    assert updates.identity(target)[1]['version'] == '1.1.0'
+    assert (old / 'SKILL.md').read_text() == 'old content'
+    with pytest.raises(FileExistsError):
+        updates.install_release(old, release)

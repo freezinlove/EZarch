@@ -12,7 +12,9 @@ skill 保存说明、代码和随库资源。项目资料、项目脚本和生�
 
 正式 ZIP 包含 `.ezarch-release.json`，记录版本与受管文件摘要。`scripts/run.py` 在这种安装中顺带限频检查官方 release 元数据，短超时、每天至多一次，同版提示去重，离线不阻塞作图。源码仓库不走自动替换；旧包没有安装摘要时，需由 agent 首次引导到经验证的新安装，不直接覆盖未知旧文件。
 
-`python <skill>/scripts/update.py` 是不依赖绘图库的独立入口：
+`<兼容 Python 3.12> <skill>/scripts/update.py` 是不依赖绘图库的独立入口，bootstrap 返回的 Python 可直接使用：
+
+- `install <新安装目录> [--source <HTTPS 元数据>]` 下载校验正式包并安装到尚不存在的位置，供没有更新入口的旧包或源码复制用户由 agent 一次引导。已有安装不覆盖；依赖可按需复用或准备。AI 应说明最终使用的安装路径和重新加载状态，避免多副本混淆。
 
 - `check <安装目录> [--force] [--source <HTTPS 元数据>]` 查询；无法联网与已是最新分别返回。
 - `prepare <安装目录>` 下载校验、解包、检查文件摘要与 Python 语法，返回 prepared 记录路径；此时原安装未变。
