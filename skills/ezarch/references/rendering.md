@@ -1,5 +1,7 @@
 # Blender 渲染操作
 
+用户要求 AI 使用 Rhino 渲染出图时，先执行 [Rhino 渲染出图的暂行限制与两次风险确认](rhino-mcp.md#rhino-渲染出图的暂行限制)，不能直接沿用本页的 Blender 渲染流程或擅自切换应用。
+
 三维主线见 [建模与操作](blender-modeling.md)。直接用 bpy 可创建或修改几何、材质、灯光、相机和渲染配置。[原生操作](edit-existing.md#blender) 说明如何延续用户场景。相机、细节和画面风格由任务决定。
 
 ## 基于完成设计的生成式渲染

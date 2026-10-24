@@ -11,6 +11,8 @@ description: Programmatic architectural drawings, Blender and Rhino models, mode
 
 用户想在 Rhino 中建模、修改 Rhino 当前文档或通过自然语言操作 Rhino/Grasshopper 时，先读 [Rhino 官方 MCP](references/rhino-mcp.md)，检查现有连接；需要时按该流程从 McNeel 官方包源安装、协助用户连接其选定的 AI 客户端并启动会话。适用于不同客户端，不限定 Codex。仅离线读取/导出 3DM 时按文件接口处理，不因文件后缀启动应用或安装 MCP。
 
+**Rhino 渲染出图的暂行限制：** Rhino 建模可正常开展，暂不默认由 AI 操控 Rhino 渲染出图。用户提出此要求时，先明确提示可能消耗大量 token、反复调试后仍无法完成，并建议不使用此方式、改由用户在 Rhino 中手动渲染。风险提示后，用户第一次明确坚持时再次简短提醒，等待第二次明确确认后才继续本次渲染任务；原始请求、建模授权或设计方案确认不能替代这两次确认。范围与执行方式见 [Rhino 渲染确认规则](references/rhino-mcp.md#rhino-渲染出图的暂行限制)。
+
 对新创作、新设计，以及在已有成果基础上的修改，先向用户提出适合当前任务的详细的方案，待用户确认后实施。方案的内容、形式和详细程度，由用户需求、参考资料、项目特点及模型判断决定，不预设统一结构或必填内容。忠实复刻、复现可直接开展，以尽可能达到 1:1、细节完整一致为目标。
 
 方案用于支持用户讨论与决策：围绕当前项目的关键问题，讲清依据、具体设计及其影响，让用户理解将做成什么、为什么这样做、哪些选择仍值得推敲。按决策所需展开，不能在关键问题尚未讲清时，仅凭简短摘要或一张图就索取确认。表达形式自由，图片辅助说明空间关系，关键论证在对话中讲清，见 [设计判断](references/design-judgment.md#让方案能够被理解和判断)。影响主要形象或空间的假设与制作方式在确认前讲清楚；具体细节仍可在已确认范围内深化。
@@ -33,6 +35,7 @@ description: Programmatic architectural drawings, Blender and Rhino models, mode
 |---|---|
 | 准备或排查环境 | [Windows/macOS 按需安装](references/environment.md) |
 | 在 Rhino 建模、修改当前模型、连接或启动 Rhino/Grasshopper MCP | [Rhino 官方 MCP：检查、安装、连接与建模](references/rhino-mcp.md)；按需读 [客户端配置](references/rhino-mcp-clients.md) |
+| 要求 AI 使用 Rhino 渲染出图，包括建模后出图 | 先执行 [暂行限制与两次风险确认](references/rhino-mcp.md#rhino-渲染出图的暂行限制) |
 | 理解 DWG/3DM/PDF/图片/链接及定位对象 | [原始资料读取](references/file-understanding.md)、[参考与尺度](references/design-reference.md) |
 | 设计、深化、判断空间与表达质量 | [建筑设计判断](references/design-judgment.md) |
 | 三维建模、场景理解、节点与局部编辑 | [Blender 建模与操作](references/blender-modeling.md) |
