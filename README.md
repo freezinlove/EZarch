@@ -23,15 +23,15 @@ EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达
 
 ```sh
 # macOS，仓库根目录；model / draft / render / all 也是可选 profile
-sh skills/ezarch/scripts/bootstrap.sh --profile core
+sh skills/ezarch/scripts/bootstrap.sh --profile core --home "<工具总目录>"
 ```
 
 ```powershell
 # Windows
-powershell -File skills/ezarch/scripts/bootstrap.ps1 -Profile core
+powershell -File skills/ezarch/scripts/bootstrap.ps1 -Profile core -RuntimeHome "<工具总目录>"
 ```
 
-core 含独立二维、参考提取、分析和排版助手；draft 保持独立二维；model 增加 Blender 与网格/3DM 交换库；render 检测或安装 Blender；all 安装建模与渲染能力。安装配置增量生效，不修改系统 Python。具体操作和其他运行入口见 [环境说明](skills/ezarch/references/environment.md)。这些安装项不意味着任务需要使用所有工具。
+core 含独立二维、参考提取、分析和排版助手；draft 保持独立二维；model 增加 Blender 与网格/3DM 交换库；render 检测或安装 Blender；all 安装建模与渲染能力。安装配置增量生效；依赖、下载和可控临时文件位于用户选定的工具总目录，相同依赖可跨安装副本复用，不修改系统 Python。Windows 首次下载前需选位置，已有偏好继续沿用。具体操作和其他运行入口见 [环境说明](skills/ezarch/references/environment.md)，文件保护和轻量更新见 [安装与版本管理](skills/ezarch/references/storage-updates.md)。这些安装项不意味着任务需要使用所有工具。
 
 包含 rhino3dm 的建模环境要求 macOS 14 或更高版本；Windows 目标为 x64。原生 Python 依赖使用预编译安装包，Windows 和 macOS 的自动测试结果见本仓库 Actions。
 
@@ -50,13 +50,16 @@ Blender 保留工程单位，几何快照和二维助手使用 mm，GLB 显式�
 以下命令用于维护工具，不是用户项目的工作步骤：
 
 ```sh
-sh skills/ezarch/scripts/bootstrap.sh --profile dev
-EZARCH_TEST_BLENDER=1 skills/ezarch/.venv/bin/python -m pytest -q tests
-skills/ezarch/.venv/bin/ruff check --config ruff.toml skills/ezarch/src skills/ezarch/scripts tests tools
-skills/ezarch/.venv/bin/python tools/package_skill.py --out ../EZarch-dist
+sh skills/ezarch/scripts/bootstrap.sh --profile dev --home "<工具总目录>"
+# 使用 bootstrap 返回的 python 路径；旧 .venv 也仍可使用
+"<环境 python>" -m pytest -q tests
+"<环境 python>" -m ruff check --config ruff.toml skills/ezarch/src skills/ezarch/scripts tests tools
+"<环境 python>" tools/package_skill.py --out ../EZarch-dist
 ```
 
 发布配置仅覆盖 Windows/macOS，自动检查结果见本仓库 Actions。开发验证、用户资料、下载素材和项目成果位于库外；项目规划和实施记录保留在本地，不随仓库发布。
+
+正式 ZIP 内含版本和逐文件摘要，使用时可轻提示新版；agent 可代办准备、启用和回退。启用后的 skill 需重新加载，自动更新偏好不会把下载完成误报为当前对话已换版。按版本标签发布的工作流已提供，只有实际发布后的版本才能被用户查询到。
 
 ZIP 的公开文件由 `tools/skill-files.txt` 明确列出；wheel 的文件在 `pyproject.toml` 中逐项指定。增加发行文件时更新相应清单。打包不扫描额外项目文件，所选文件及其父目录中的软链接/Windows junction 会被拒绝；这些维护配置不参与用户作图流程。
 

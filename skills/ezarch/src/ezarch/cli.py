@@ -73,7 +73,8 @@ def main(argv=None):
     started = time.time()
     log = {"module": args.module, "input": str(args.input), "output": str(args.out),
            "state": "running", "started_unix": started}
-    log["runtime"] = {"python": sys.version.split()[0]}
+    from . import __version__
+    log["runtime"] = {"python": sys.version.split()[0], "skill_code_version": __version__}
     for name in ["ezarch", "ezdxf", "pymupdf", "cadquery", "rhino3dm"]:
         try:
             log["runtime"][name] = importlib.metadata.version(name)

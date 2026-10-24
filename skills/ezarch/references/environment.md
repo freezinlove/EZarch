@@ -4,18 +4,18 @@
 
 ## 随库环境
 
-从 SKILL.md 所在目录确定 `<skill>`。安装器使用 uv、Python 3.12 和锁文件，在用户的受管总目录准备依赖，不替换系统 Python。相同锁文件、平台和 extras 复用同一依赖环境；启动器从当前安装的 src 加载代码，避免多个副本串用代码。旧 skill 内 `.venv` 仍可使用，不自动搬动或删除。
+从 SKILL.md 所在目录确定 `<skill>`。安装器使用 uv、Python 3.12 和锁文件，在用户的受管总目录准备依赖，不替换系统 Python。相同依赖锁内容、平台和 extras 复用同一依赖环境，只有 skill 自身版本号变化不重建依赖；启动器从当前安装的 src 加载代码，避免多个副本串用代码。旧 skill 内 `.venv` 仍可使用，不自动搬动或删除。
 
 ```sh
 # macOS；路径含空格时保留引号
 sh "<skill>/scripts/bootstrap.sh" --profile core --home "<工具总目录>"
-python3 "<skill>/scripts/run.py" doctor
+"<bootstrap 返回的 python>" "<skill>/scripts/run.py" doctor
 ```
 
 ```powershell
 # Windows
 powershell -File "<skill>/scripts/bootstrap.ps1" -Profile core -RuntimeHome "<工具总目录>"
-python "<skill>/scripts/run.py" doctor
+& "<bootstrap 返回的 python>" "<skill>/scripts/run.py" doctor
 ```
 
 | 安装配置 | 实际准备的能力 |
@@ -31,7 +31,7 @@ python "<skill>/scripts/run.py" doctor
 
 位置优先级：显式 home、`EZARCH_HOME`、用户配置、平台默认目录。Windows 没有位置偏好时，在首次下载前要求指定目录；不擅自选盘。小配置保存在 `%LOCALAPPDATA%/EZarch/settings.json` 或 macOS 的 `~/Library/Application Support/EZarch/settings.json`，可用 `EZARCH_CONFIG` 改位置。工具、Python、缓存和可控临时文件均跟随总目录；不承诺第三方程序或系统零占用 C 盘。
 
-`python -m ezarch.runtime status` 只读取位置；`configure <目录>` 验证可写性并记住位置，不搬迁旧内容。更换总目录后可重新 bootstrap，旧环境保留至新环境成功；不直接移动含绝对路径的 venv。位置内的 state 保存环境绑定、锁和失败原因。下载采用有限重试、完整性校验和临时文件替换；依赖准备失败不覆盖前一个成功绑定。可选 Blender、ODA、字体分别返回状态，某项失败不会把其他就绪项写成失败。
+`python -m ezarch.runtime status` 只读取位置；`configure <目录>` 验证可写性并记住位置，不搬迁旧内容。更换总目录后可重新 bootstrap，旧环境保留至新环境成功；不直接移动含绝对路径的 venv。位置内的 state 保存环境绑定、锁和失败原因。`runtime register-tool oda|blender|uv <可执行文件>` 可登记已有工具供多个安装副本复用，不复制或搬迁软件；安装入口也会登记成功使用的程序。登记仅说明路径存在，Blender 版本及具体操作仍按实际探测，已失效路径不复用。下载采用有限重试、完整性校验和临时文件替换；依赖准备失败不覆盖前一个成功绑定。可选 Blender、ODA、字体分别返回状态，某项失败不会把其他就绪项写成失败。
 
 默认环境不安装 CadQuery/OCCT/VTK；独立 legacy-cad extra 服务于未继续维护的旧接口，不由 bootstrap 启用，确需调用时另行准备兼容环境。rhino3dm 安装包要求 macOS 14+。指定原生依赖使用 wheel，避免在用户电脑临时编译。Blender 使用自己的 Python，外围库留在独立环境。
 

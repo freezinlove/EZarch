@@ -13,7 +13,7 @@ import zipfile
 from pathlib import Path
 
 from .project import skill_root, write_json
-from .runtime import download, locations, lock
+from .runtime import download, locations, lock, register_tool, registered_tool, require_install_location
 
 BLENDER_VERSION = "4.5.11"
 BLENDER_RELEASE = "https://mirror.blender.org/release/Blender4.5/"
@@ -53,7 +53,7 @@ def install_font():
 
 
 def find_blender() -> str | None:
-    candidates = [os.environ.get("EZARCH_BLENDER"), shutil.which("blender")]
+    candidates = [os.environ.get("EZARCH_BLENDER"), shutil.which("blender"), registered_tool('blender')]
     cache = locations()["tools"]
     candidates += [str(p) for p in (skill_root() / ".ezarch/tools").glob("**/blender.exe")]
     candidates += [str(p) for p in (skill_root() / ".ezarch/tools").glob("**/Blender.app/Contents/MacOS/Blender")]
@@ -119,7 +119,9 @@ def doctor(out: Path | None = None):
             packages[name] = importlib.metadata.version(name)
         except importlib.metadata.PackageNotFoundError:
             packages[name] = None
-    result = {"system": platform.system(), "architecture": platform.machine(),
+    from . import __version__
+    result = {"skill_code": {"version": __version__, "root": str(skill_root())},
+              "system": platform.system(), "architecture": platform.machine(),
               "python": platform.python_version(), "blender": find_blender(), "packages": packages,
               "oda_file_converter": find_oda(), "native_apps": "deferred", "ifc": "deferred",
               "locations": {k: str(v) for k, v in locations().items()},
@@ -204,13 +206,19 @@ def _install_oda():
 
 
 def install_blender():
+    require_install_location()
     with lock(locations(create=True)["state"] / "blender-install.lock"):
-        return _install_blender()
+        path = _install_blender()
+        register_tool('blender', path)
+        return path
 
 
 def install_oda():
+    require_install_location()
     with lock(locations(create=True)["state"] / "oda-install.lock"):
-        return _install_oda()
+        path = _install_oda()
+        register_tool('oda', path)
+        return path
 
 
 def probe_capability(name):

@@ -18,7 +18,7 @@ def findings(root, *, commits=None, max_bytes=10 * 1024 ** 2):
     rows = []
     revisions = list(commits) if commits is not None else [None]
     for revision in revisions:
-        arguments = (['diff-tree', '--root', '--no-commit-id', '-r', '--name-only', '-z', '--diff-filter=ACMR', revision]
+        arguments = (['diff-tree', '-m', '--root', '--no-commit-id', '-r', '--name-only', '-z', '--diff-filter=ACMR', revision]
                      if revision else ['diff', '--cached', '--name-only', '-z', '--diff-filter=ACMR'])
         for raw in git(root, *arguments).split(b'\0'):
             if not raw:

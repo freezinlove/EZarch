@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import time
+import tomllib
 import urllib.error
 import urllib.request
 import uuid
@@ -60,6 +61,31 @@ def configure(home):
     value["home"] = str(paths["home"])
     atomic_json(config_file(), value)
     return {k: str(v) for k, v in paths.items()}
+
+
+def require_install_location(home=None):
+    if os.name == 'nt' and not (home or os.environ.get('EZARCH_HOME') or read_json(config_file(), {}).get('home')):
+        raise ValueError('Choose a runtime directory before installation; pass home or set EZARCH_HOME. No download started.')
+
+
+def register_tool(name, path):
+    if name not in {'oda', 'blender', 'uv'}:
+        raise ValueError('Tool names: oda, blender, uv')
+    path = Path(path).expanduser().resolve()
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    state = locations(create=True)['state'] / 'tools.json'
+    with lock(state.with_suffix('.lock')):
+        records = read_json(state, {})
+        records[name] = {'path': str(path), 'state': 'registered_path', 'registered_at': time.time()}
+        atomic_json(state, records)
+    return records[name]
+
+
+def registered_tool(name):
+    record = read_json(locations()['state'] / 'tools.json', {}).get(name, {})
+    path = Path(record['path']) if record.get('path') else None
+    return str(path) if path and path.is_file() else None
 
 
 def process_env(home=None):
@@ -127,10 +153,23 @@ def binding_file(skill, home=None):
     return locations(home)["state"] / f"runtime-{key}.json"
 
 
+def dependency_fingerprint(skill):
+    raw = (Path(skill) / 'uv.lock').read_bytes()
+    try:
+        value = tomllib.loads(raw.decode())
+        for package in value.get('package', []):
+            if package.get('name') == 'ezarch' and package.get('source', {}).get('editable') == '.':
+                package['version'] = 'workspace-code-loaded-separately'
+        raw = json.dumps(value, sort_keys=True).encode()
+    except tomllib.TOMLDecodeError:
+        pass  # uv itself reports invalid lock files; preserve identity for diagnostics.
+    return hashlib.sha256(raw).hexdigest()
+
+
 def find_python(skill, home=None):
     record = read_json(binding_file(skill, home), {})
     selected = Path(record["python"]) if record.get("python") else None
-    if record.get("lock_sha256") and record["lock_sha256"] != hashlib.sha256((Path(skill) / "uv.lock").read_bytes()).hexdigest():
+    if record.get("lock_sha256") and record["lock_sha256"] != dependency_fingerprint(skill):
         return None
     if selected and selected.is_file():
         return selected
@@ -141,11 +180,12 @@ def find_python(skill, home=None):
 def prepare(skill, *, extras=(), home=None, uv=None):
     """Share locked dependencies; load each installation's code from its own src."""
     skill = Path(skill).resolve()
+    require_install_location(home)
     if set(extras) - {"model", "dev"}:
         raise ValueError("Runtime extras: model, dev")
     paths = locations(home, create=True)
-    uv = uv or shutil.which("uv") or str(paths["tools"] / ("uv.exe" if os.name == "nt" else "uv"))
-    payload = (skill / "uv.lock").read_bytes() + json.dumps([sorted(extras), platform.system(), platform.machine(), "3.12"]).encode()
+    uv = uv or registered_tool("uv") or shutil.which("uv") or str(paths["tools"] / ("uv.exe" if os.name == "nt" else "uv"))
+    payload = dependency_fingerprint(skill).encode() + json.dumps([sorted(extras), platform.system(), platform.machine(), "3.12"]).encode()
     key = hashlib.sha256(payload).hexdigest()[:24]
     environment = paths["envs"] / key
     python = python_at(environment)
@@ -167,7 +207,7 @@ def prepare(skill, *, extras=(), home=None, uv=None):
                            check=True, timeout=30)
             atomic_json(ready, {"python": str(python), "extras": sorted(extras), "key": key})
             record = {"python": str(python), "extras": sorted(extras), "key": key, "reused": reused,
-                      "lock_sha256": hashlib.sha256((skill / "uv.lock").read_bytes()).hexdigest()}
+                      "lock_sha256": dependency_fingerprint(skill)}
             atomic_json(binding_file(skill, home), record)
             return record
         except Exception as error:
@@ -185,8 +225,14 @@ def main(argv=None):
     sub.add_parser("status")
     s = sub.add_parser("configure")
     s.add_argument("home")
+    s = sub.add_parser('register-tool')
+    s.add_argument('name', choices=['oda', 'blender', 'uv'])
+    s.add_argument('path')
     a = parser.parse_args(argv)
-    result = configure(a.home) if a.operation == "configure" else {k: str(v) for k, v in locations().items()}
+    if a.operation == 'register-tool':
+        result = register_tool(a.name, a.path)
+    else:
+        result = configure(a.home) if a.operation == "configure" else {k: str(v) for k, v in locations().items()}
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 

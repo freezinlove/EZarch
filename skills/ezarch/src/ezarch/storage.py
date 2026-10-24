@@ -5,7 +5,7 @@ from pathlib import Path
 
 def protected_roots():
     source = Path(__file__).resolve()
-    roots = []
+    roots = [source.parent]
     for parent in source.parents:
         if (parent / 'SKILL.md').is_file() and (parent / 'src/ezarch').is_dir():
             roots.append(parent)

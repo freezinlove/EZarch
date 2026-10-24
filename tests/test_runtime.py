@@ -73,3 +73,27 @@ def test_shared_dependencies_distinct_code_and_failed_upgrade(isolated, monkeypa
     assert runtime.read_json(runtime.binding_file(first))['python'] == a['python']
     assert runtime.find_python(first) is None  # changed dependencies require preparation
     assert Path(a['python']).exists()
+
+
+def test_code_only_release_reuses_dependency_identity(tmp_path):
+    skill = tmp_path / 'skill'
+    skill.mkdir()
+    locked = '[[package]]\nname="ezarch"\nversion="0.6.0"\nsource={editable="."}\n\n[[package]]\nname="ezdxf"\nversion="1.4.4"\nsource={registry="https://pypi.org/simple"}\n'
+    path = skill / 'uv.lock'
+    path.write_text(locked)
+    first = runtime.dependency_fingerprint(skill)
+    path.write_text(locked.replace('0.6.0', '0.7.0'))
+    assert runtime.dependency_fingerprint(skill) == first
+    path.write_text(locked.replace('1.4.4', '1.4.5'))
+    assert runtime.dependency_fingerprint(skill) != first
+
+
+def test_registered_tool_shared_without_copying_and_deleted_path_not_reused(isolated):
+    executable = isolated / 'existing software.exe'
+    executable.write_bytes(b'synthetic path only')
+    result = runtime.register_tool('oda', executable)
+    assert result['state'] == 'registered_path'
+    assert runtime.registered_tool('oda') == str(executable)
+    assert list(runtime.locations()['tools'].iterdir()) == []
+    executable.unlink()
+    assert runtime.registered_tool('oda') is None

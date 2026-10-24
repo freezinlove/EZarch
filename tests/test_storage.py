@@ -11,7 +11,10 @@ def test_resolved_output_rejects_link_into_tool_tree(tmp_path, monkeypatch):
     tool = tmp_path / 'tool'
     tool.mkdir()
     linked = tmp_path / 'link'
-    linked.symlink_to(tool, target_is_directory=True)
+    try:
+        linked.symlink_to(tool, target_is_directory=True)
+    except OSError:
+        pytest.skip('Host lacks symlink creation permission')
     with pytest.raises(ValueError, match='Project output'):
         output_path(linked / 'drawing.pdf', roots=[tool])
     assert output_path(tool / 'fixture.dxf', roots=[tool], allow_tool_write=True) == tool / 'fixture.dxf'

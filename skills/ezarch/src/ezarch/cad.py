@@ -37,11 +37,12 @@ def destination(source, target):
 
 def find_oda():
     from .project import skill_root
-    from .runtime import locations
+    from .runtime import locations, registered_tool
     cache = locations()['tools'] / 'oda'
     candidates = [os.environ.get('EZARCH_ODA'), shutil.which('ODAFileConverter'),
                   cache / 'ODAFileConverter.app/Contents/MacOS/ODAFileConverter',
-                  skill_root() / '.ezarch/tools/oda/ODAFileConverter.app/Contents/MacOS/ODAFileConverter']
+                  skill_root() / '.ezarch/tools/oda/ODAFileConverter.app/Contents/MacOS/ODAFileConverter',
+                  registered_tool('oda')]
     for candidate in candidates:
         if candidate and Path(candidate).is_file():
             return str(Path(candidate).resolve())
