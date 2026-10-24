@@ -39,7 +39,7 @@ EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达
 |---|---|
 | 画线面、文字、尺寸与符号 | [Drawing](references/geometry-drawings.md)：新建 DXF 或绑定已有布局；[尺寸端点](references/text-dimensions.md#端点与原生尺寸)：对齐、投影与原生标注 |
 | 画墙、交接与开洞 | [墙面区域](references/wall-regions.md)：路径加厚、布尔与切割；[墙柱关系知识](references/wall-column-grid-relationships.md) |
-| 画门窗、家具和设备 | [门窗](references/editable-components.md#门窗接口) · [家具](references/editable-components.md#家具接口与方向)：参数化局部几何；[门窗表达知识](references/door-window-representation.md) |
+| 画门窗、家具和设备 | [门窗](references/editable-components.md#门窗接口) · [家具](references/editable-components.md#家具接口与方向)：参数化局部几何与方向；[门窗表达知识](references/door-window-representation.md) · [家具与使用空间](references/furniture-spatial-relationships.md) |
 | 画楼梯、电梯、柱与轴网 | [楼梯与电梯](references/vertical-components.md) · [柱和轴线](references/grids-columns.md)；[楼梯电梯知识](references/stairs-and-lifts-representation.md) · [柱网关系知识](references/wall-column-grid-relationships.md) |
 | 放置或改变组件表达 | [组件接入](references/editable-components.md#接入正在使用的画图方式)：写入现有 DXF、Drawing 或 Canvas；[表达样式](references/editable-components.md#同一几何的表达)：共享几何的彩色与线稿 |
 | 画场地、道路、植物与流线 | [场地图元](references/site-symbols.md)：返回可编辑组件；[总平面知识](references/site-plan-representation.md) · [地图、太阳与影长](references/site-analysis.md) |

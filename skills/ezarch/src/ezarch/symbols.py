@@ -6,7 +6,7 @@ Native curves are retained. Nominal bounds describe dimensions, not occupied are
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import ezdxf
 from ezdxf import bbox
@@ -22,6 +22,18 @@ def _positive(value, name):
     if value <= 0:
         raise ValueError(f"{name} must be positive")
     return value
+
+
+def _directions(values):
+    """Copy named finite, nonzero XY vectors as unit directions, not positions."""
+    result = {}
+    for name, value in (values or {}).items():
+        x, y = _finite(value, 2, "direction")
+        length = math.hypot(x, y)
+        if not math.isfinite(length) or length == 0:
+            raise ValueError("Direction must be finite and nonzero")
+        result[name] = (x / length, y / length)
+    return result
 
 
 @dataclass
@@ -63,14 +75,15 @@ def linework_style(*, outline_mm=.18, detail_mm=.09, seam_mm=.05, glass_mm=.13):
 class Symbol:
     """A small editable geometry resource, not a required project representation.
 
-    Parts contain detached native ezdxf entities in local mm. Anchors and nominal
-    bounds are construction metadata: arbitrary later edits do not update them.
+    Parts contain detached native ezdxf entities in local mm. Anchors, directions
+    and nominal bounds are construction metadata: later edits do not update them.
     Builder methods and add() can also be used independently of supplied factories.
     """
 
-    def __init__(self, *, nominal_bounds=None, anchors=None):
+    def __init__(self, *, nominal_bounds=None, anchors=None, directions=None):
         self.parts = []
         self.anchors = dict(anchors or {})
+        self.directions = _directions(directions)
         self.nominal_bounds = (None if nominal_bounds is None else
                                _finite(nominal_bounds, 4, "nominal_bounds"))
         self._layout = ezdxf.new("R2010").modelspace()
@@ -187,6 +200,7 @@ class Placement:
     nominal_envelope: tuple | None
     transform: tuple
     roles: tuple = ()
+    directions: dict = field(default_factory=dict)
 
 
 def place_symbol(symbol, layout, *, style, unit_mm, origin=(0, 0), rotation_deg=0,
@@ -214,6 +228,10 @@ def place_symbol(symbol, layout, *, style, unit_mm, origin=(0, 0), rotation_deg=
     a, b, d, e, _, _ = transform
     matrix = Matrix44([a, d, 0, 0, b, e, 0, 0, 0, 0, 1/unit_mm, 0, ox, oy, 0, 1])
     anchors = {key: transform_points([point], transform)[0] for key, point in symbol.anchors.items()}
+    # Directions follow reflection/rotation, without unit scaling or translation.
+    cosine, sine = math.cos(math.radians(angle)), math.sin(math.radians(angle))
+    directions = {key: (sign*cosine*x - sine*y, sign*sine*x + cosine*y)
+                  for key, (x, y) in _directions(symbol.directions).items()}
     envelope = None
     if symbol.nominal_bounds is not None:
         left, bottom, right, top = symbol.nominal_bounds
@@ -253,7 +271,7 @@ def place_symbol(symbol, layout, *, style, unit_mm, origin=(0, 0), rotation_deg=
         roles.append(part.role)
     for entity in entities:
         layout.add_entity(entity)
-    return Placement(tuple(entities), anchors, envelope, transform, tuple(roles))
+    return Placement(tuple(entities), anchors, envelope, transform, tuple(roles), directions)
 
 
 def polygon_symbol(geometry, *, unit_mm, role="outline", fill=None):

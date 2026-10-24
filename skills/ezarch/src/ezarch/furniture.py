@@ -28,6 +28,16 @@ _DETAILS = {
         "fridge", "desk", "washer", "vanity", "wc", "bathtub")},
 }
 
+# Directions describe only the supplied geometry, not its intended room position.
+# Symmetric/ambiguous resources have no inferred front or required approach side.
+_RESOURCE_DIRECTIONS = {
+    "bed": {"head": (0, 1), "foot": (0, -1)},
+    "shower": {"opening": (0, 1)},
+    **{kind: {"front": (0, 1), "back": (0, -1)} for kind in (
+        "sofa", "lounge", "dining_chair", "task_chair", "wc", "nightstand",
+        "wardrobe", "cabinet", "counter", "tv", "fridge", "washer", "vanity")},
+}
+
 
 def _count(value, name):
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
@@ -92,7 +102,8 @@ def furniture_symbol(kind, width, depth, **details):
             fittings.append((name, (left, bottom, right, top)))
         details["fittings"] = fittings
     symbol = Symbol(nominal_bounds=(0, 0, width, depth),
-                    anchors={"origin": (0, 0), "center": (width/2, depth/2)})
+                    anchors={"origin": (0, 0), "center": (width/2, depth/2)},
+                    directions=_RESOURCE_DIRECTIONS.get(kind))
     _draw(symbol, kind, width, depth, details)
     return _bounded(symbol, width, depth)
 
@@ -278,13 +289,14 @@ def _draw(symbol, kind, width, depth, details):
 
 
 def chair_symbol(width, depth, *, back_inset):
-    """Seat rectangle and back line; lower-left origin, back toward +Y. No placement."""
+    """Keep the original +Y back geometry; query directions['front'] for facing."""
     width, depth = _positive(width, "width"), _positive(depth, "depth")
     inset = _positive(back_inset, "back_inset")
     if inset >= depth:
         raise ValueError("Back inset must be less than depth")
     symbol = Symbol(nominal_bounds=(0, 0, width, depth),
-                    anchors={"origin": (0, 0), "center": (width/2, depth/2), "back": (width/2, depth)})
+                    anchors={"origin": (0, 0), "center": (width/2, depth/2), "back": (width/2, depth)},
+                    directions={"front": (0, -1), "back": (0, 1)})
     symbol.rect((0, 0, width, depth), fill="upholstery")
     symbol.segment((0, depth-inset), (width, depth-inset), "detail")
     return symbol
@@ -296,7 +308,8 @@ def desk_symbol(width, depth, *, computer=False):
     if not isinstance(computer, bool):
         raise TypeError("computer must be bool")
     symbol = Symbol(nominal_bounds=(0, 0, width, depth),
-                    anchors={"origin": (0, 0), "center": (width/2, depth/2)})
+                    anchors={"origin": (0, 0), "center": (width/2, depth/2)},
+                    directions={"use_side": (0, 1)} if computer else None)
     symbol.rect((0, 0, width, depth), fill="table")
     if computer:
         symbol.rect((width*.22, depth*.15, width*.78, depth*.15+90), role="detail")

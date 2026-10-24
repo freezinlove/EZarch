@@ -24,6 +24,7 @@ references/environment.md
 references/exchange-verification.md
 references/geometry-drawings.md
 references/editable-components.md
+references/furniture-spatial-relationships.md
 references/wall-regions.md
 references/vertical-components.md
 references/grids-columns.md

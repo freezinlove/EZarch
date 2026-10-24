@@ -25,9 +25,9 @@ Canvas 也可用 `canvas.cad(doc, origin=..., scale=..., layout_name="Model", ha
 
 - 几何使用局部 mm，`unit_mm` 是每目标单位的 mm 数；`origin` 使用目标坐标。局部原点先放在指定位置，方向由局部 X 取反的镜像和逆时针旋转确定；镜像在旋转之前。没有任意拉伸，也不从图纸单位猜测纸空间或块内单位。
 - 需要 R2004+ 以保存真彩色。目标图层须已存在，原定义、可见性和既有对象均不覆盖；新实体使用显式颜色、纸面线宽和连续线型。`role_layers/role_linetypes` 可把实际使用的角色映射到已有图层/线型，缺失资源报错且不写入部分实体。线型长度沿用目标文档单位和原生比例设置，不自动换算纸面虚线；被冻结的图层仍冻结。没有自动保存、出图或把生成内容登记到项目模型。
-- 返回 `Placement.entities` 原生可编辑实体、逐实体对应的 `roles`、目标坐标的 `anchors`、四角 `nominal_envelope` 和可交给 [frames](coordinate-transforms.md) 的二维仿射 `transform`。可以自行放进块，再用原生 INSERT 复用。
+- 返回 `Placement.entities` 原生可编辑实体、逐实体对应的 `roles`、目标坐标的 `anchors`、四角 `nominal_envelope`、方向 `directions` 和可交给 [frames](coordinate-transforms.md) 的二维仿射 `transform`。可以自行放进块，再用原生 INSERT 复用。
 - `Symbol.nominal_bounds` 是尺寸包络；家具不一定填满它，门扇、门框、窗台线也可能伸出门窗名义跨度。`geometry_bounds()` 是原生轮廓的轴向范围，椭圆范围沿用 ezdxf 的曲线近似。**两者都不是精确占地区域或合规净距**；真实轮廓保留在返回的曲线中。
-- 直接编辑原生实体后，构造时的锚点和尺寸元数据不会自动更新。调用者可改元数据、重新构造或自行测量。`Drawing.furniture` 是旧的简化图形接口；详细组件用下方 symbol 入口。
+- 直接编辑原生实体后，构造时的锚点、方向和尺寸元数据不会自动更新；元数据也不会随 DXF 自动保存或回读。调用者可保留或更新记录、重新构造或自行测量。`Drawing.furniture` 是旧的简化图形接口；详细组件用下方 symbol 入口。
 
 ## 同一几何的表达
 
@@ -50,6 +50,8 @@ Canvas 也可用 `canvas.cad(doc, origin=..., scale=..., layout_name="Model", ha
 
 `from ezarch.furniture import furniture_symbol, chair_symbol, desk_symbol, shelf_symbol`；源码见 [furniture.py](../src/ezarch/furniture.py)。`furniture_symbol(kind, width, depth, **details)` 返回 Symbol，外尺寸和细节尺寸均为局部 mm，原点在尺寸包络左下角，含 `origin/center` 锚点。项目位置与朝向交给 [放置接口](#接入正在使用的画图方式)，函数本身不安排房间布局。
 
+家具组合、朝向与实际使用、活动和通行的关系见 [家具、设备与空间使用关系](furniture-spatial-relationships.md)。
+
 | kind | 显式细节 / 资源方向 |
 |---|---|
 | `bed` | 必填 `mattress=(宽,长)`、`pillows`；床头在 +Y，枕头数不由床宽推断。 |
@@ -65,6 +67,23 @@ Canvas 也可用 `canvas.cad(doc, origin=..., scale=..., layout_name="Model", ha
 另外三个独立入口：`chair_symbol(width,depth,back_inset=...)` 是座面和背线，背在 +Y；`desk_symbol(width,depth,computer=False)` 是桌面及可选显示器，不附椅子；`shelf_symbol(width,depth,divisions=...,axis="x"或"y")` 显式选择分隔数量与方向。它们也返回 Symbol。
 
 改变外尺寸会重算圆角、把手、缝线和配件等对应关系，不是非等比缩放；某些小尺寸放不下细节会报错。床垫、枕头、座位、模块和配件在生成时校验，返回后可继续编辑原生几何。有效尺寸不保证满足生产、人体工学或规范要求。
+
+### 可查询的方向
+
+`symbol.directions` 是名称 → 局部 XY 单位向量；`placement.directions` 是放置后目标 CAD 坐标中的对应向量。向量随镜像和旋转变换，不包含平移或单位缩放，也不是使用净距。现有几何、原点及旋转参数保持原义，不会因新增方向信息转动家具。
+
+| 资源 | 提供的方向与含义 |
+|---|---|
+| `sofa/lounge/dining_chair/task_chair/wc` | `front=(0,1)`、`back=(0,-1)`；分别朝座位前方或便器前端，以及靠背或水箱一侧。 |
+| `nightstand/wardrobe/cabinet/counter/tv/fridge/washer/vanity` | `front=(0,1)`、`back=(0,-1)`；指该资源的柜体、设备正面，非内部所有配件的独立使用侧。 |
+| `chair_symbol` | `front=(0,-1)`、`back=(0,1)`；保留简化椅子的原有几何。它与详细餐椅默认面向相反，使用同名方向取值可识别差别。 |
+| `bed` | `head=(0,1)`、`foot=(0,-1)`，不指定从哪一侧上下床。 |
+| `shower` | `opening=(0,1)`，指向该资源的开口侧。 |
+| `desk_symbol(computer=True)` | `use_side=(0,1)`，指从桌内朝向显示器前方的使用侧；不是坐在该侧的人的面向。 |
+
+其余资源返回空字典，表示未定义方向，不代表各侧都适合使用。自绘 `Symbol(..., directions=...)` 可提供自己的名称与二维向量，有限非零向量会归一化；后续赋值在放置时再次校验。描述的是实际构件方向，不能替 AI 选择它应面向的对象。
+
+需要临时看方向时，可在观察副本上用现有线条或 [流线箭头](site-symbols.md) 从选定锚点 `p` 向 `p + L*d` 绘制，`d` 为所选方向，`L` 为调用者确定的目标单位长度；不会默认生成方向标记。Canvas 返回的 Placement 仍使用内部毫米 CAD、Y 向上；纸面方向为 `(dx,-dy)`，纸面位置和比例另由 Canvas 映射。
 
 
 ## 来源与验证口径
