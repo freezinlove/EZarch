@@ -47,11 +47,11 @@ GB/T 50104—2010 的目录另列图线与比例、图例、图样画法和尺�
 | `section_direction_length_mm` | 5 | 剖切方向线长度 |
 | `excluded_axis_labels` | I、O、Z | 当前样式排除的轴号，可按采用的规则覆盖 |
 
-字体可由 `font` 选择；附带字体的来源与许可见 [字体授权](../THIRD_PARTY_NOTICES.md)。其他字体和图元可通过原生 API 使用，复制字体到交付物时采用其实际许可条件。
+字体可由 `font` 选择，实际字形、后备与输出文字形式见 [字体与排版](typography.md)；随库字体的来源与许可见 [字体授权](../THIRD_PARTY_NOTICES.md)。
 
 ## 独立绘图接口
 
-`ezarch.drafting.Drawing(bounds, scale=100, title="", number="", margin=12, *, style=None, font=None)` 创建独立 DXF 与 Canvas，不依赖三维。`bounds` 是包含标注区域的模型 mm 边界，`scale` 为比例分母，`margin` 为纸面 mm；文字与笔宽按纸面尺寸输入。保存格式通过 `save(..., formats=...)` 选择。
+下表对应随库绘图方法与所表达的信息；创建文档、绑定既有布局、单位和保存方式统一见 [Drawing 接口](geometry-drawings.md)。
 
 | 现有方法 | 支持范围与参数含义 |
 |---|---|

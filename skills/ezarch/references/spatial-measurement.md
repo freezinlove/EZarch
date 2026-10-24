@@ -1,12 +1,12 @@
 # 几何包络与局部截面
 
-这些函数返回几何与测量值，不识别空间用途或作出通行、使用、合规判断。坐标、测量方向与对象由调用者选取。
+门扇扫掠、物体矩形包络和指定截面长度的计算。`from ezarch.analysis import swing_envelope, oriented_footprint` 返回二维点列；`from ezarch.measurements import measure_clear_width` 接收 Shapely 区域和截线，返回分段测量。这些值描述所选几何，不识别空间用途或判定通行、使用、合规。
 
 ## 包络
 
-`ezarch.analysis.swing_envelope(hinge, radius_mm, closed_angle_deg, opening_angle_deg=90)` 返回铰链门扫掠的多边形近似；坐标为 mm，角度为逆时针度数。
+`swing_envelope(hinge, radius_mm, closed_angle_deg, opening_angle_deg=90)` 返回铰链门扫掠的多边形点列近似；坐标为 mm，角度从 +X 起按逆时针度数。点列可交给 Drawing.poly 或 Shapely Polygon。
 
-`oriented_footprint(size_mm, position_mm, rotation_z_deg)` 返回旋转矩形外廓。矩形包络、物体实际轮廓、运动范围和人的操作空间不是同一对象。
+`oriented_footprint(size_mm, position_mm, rotation_z_deg=0)` 返回以 position_mm 的 XY 为中心的四角点列。矩形包络、物体实际轮廓、运动范围和人的操作空间不是同一对象。源码见 [analysis.py](../src/ezarch/analysis.py)。
 
 ## 指定截面的宽度
 

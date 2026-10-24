@@ -1,6 +1,6 @@
 # 轴线、轴号与柱截面资源
 
-`ezarch.grids` 提供直线端部、轴线、轴号、偏轴和圆包络间距计算；`ezarch.symbols` 提供柱截面。位置、编号和截面由调用参数给出。
+`from ezarch import grids` 提供直线端部计算、向现有 Drawing 绘制轴线/轴号，以及偏轴、圈距测量；源码见 [grids.py](../src/ezarch/grids.py)。柱截面通过 `from ezarch.symbols import rectangular_column_symbol, circular_column_symbol, polygon_symbol` 取得，返回局部 mm 的 Symbol。位置、编号和截面由调用参数给出。
 
 墙柱交接、轴网定位与空间支承的专业关系见 [墙、柱与轴网的关系](wall-column-grid-relationships.md)。
 
@@ -12,7 +12,7 @@
 | `circular_column_symbol(radius, fill=None)` | 同样居中，保留原生 CIRCLE 与可选圆形 HATCH；radius 是实际截面半径，不是纸面定位符号尺寸。 |
 | 已有 `polygon_symbol(geometry, unit_mm=..., role="outline", fill=None)` | 自定义直边 Polygon/MultiPolygon，包括凹形和孔洞；按输入单位换算，不归零、不求形心。其参考点仍由调用者定义。曲线截面也可由 Symbol/native API 自行构造。 |
 
-快捷截面的描边角色为 outline，fill 为调用者定义的填充角色；颜色、纸面线宽与填充开关由 [SymbolStyle](editable-components.md#同一几何的表达) 选择。相同几何可以填色或纯线稿表达，不要求输出两种。
+快捷截面的描边角色为 outline，fill 为调用者定义的填充角色；颜色、纸面线宽与填充开关由 [SymbolStyle](editable-components.md#同一几何的表达) 选择。
 
 位置、旋转、镜像、单位换算复用 [place_symbol](editable-components.md#几何表达与目标文档)。可直接写入已有布局或自选块，返回原生可编辑实体与锚点；柱号可用 Drawing.text、原生 TEXT/ATTRIB 另行添加。工具不按轴交点自动布柱、夹紧到建筑边界、合并同坐标柱、编号或移动周边门窗；也不根据截面形状认定材料、承重性质或设备用途。截面生成成功不代表结构适用。
 
@@ -26,7 +26,7 @@
 | `draw_axis(drawing,start,end,trim_start_mm=0,trim_end_mm=0,layer="A-GRID",color="BYLAYER",width=None,dash=None)` | 绘制一条轴线，返回本次原生图元。两端退让显式给出；默认不退让、不附轴号或柱、不生成维度标注。dash 和其他表达可自由选定。 |
 | `draw_axis_tag(drawing,center,label,diameter_mm=...,text_height_mm=...,rotation=0,leader=(),layer="A-ANNOTATION",color="BYLAYER",width=None,text_color="BYLAYER")` | 圈与居中文字；label 不按项目名称规则筛选/截断，rotation 为目标 XY 逆时针角度。可选 leader 为完整显式折线点列，使用目标坐标，不自动寻路、连接或裁到圈边。返回 AxisTag 的 entities、目标坐标 center 和目标单位 radius；后续编辑实体不会自动更新这些构造元数据。 |
 
-轴线与轴号互相独立，可以只画其中一项、多端标注，或由调用者把一组轴号放在自选基线上。柱号、非圆轴号和其他标记仍可直接用现有文字/原生图元。没有固定编号序列、三翼结构、横纵方向限制、自动交错轴号或统一字体要求。
+轴线与轴号互相独立，可以只画其中一项、多端标注，或把一组轴号放在自选基线上。柱号、非圆轴号和其他标记可使用文字或原生图元。
 
 ## 偏轴测量与圈距
 
@@ -38,7 +38,7 @@
 - 空输入或单个圆没有成对比较，结果明确 pair_count=0，不给出整体通过、评分或完整覆盖结论。
 - scope/not_checked 保留边界：没有测量文字占位、引线相交、其他图元、未选轴号或设计适用性。长编号可以超出圈，圈不相交也不能证明文字不相交。字体测量、自动字号/位置搜索未由本接口提供。
 
-同一画面与单位的选择由调用者负责。跨楼层/结构单元的相同坐标不自动比较或去重；跨层匹配、结构校核、柱墙消隐和斜向原生 DIMENSION 未由本模块提供。AI 可结合原图、用途和其他工具继续判断或构造，现有接口范围不限制可采用的能力。
+跨楼层/结构单元的相同坐标不自动比较或去重；测量需采用同一画面与单位。本模块不做跨层匹配、结构校核或柱墙消隐；斜向原生 DIMENSION 可接入 [Drawing.dimension](text-dimensions.md#端点与原生尺寸)。
 
 ## 来源与验证边界
 

@@ -2,9 +2,26 @@
 
 随库 Python 工具的安装与启动方法。已有兼容环境可以复用，纯 SVG 文本生成无需安装 EZarch 或 Blender。
 
+## 命令与项目脚本
+
+`<skill>` 指本次读取的 SKILL.md 所在目录；`<环境 python>` 是该安装可用的 Python，准备方法见下文。
+
+- **调用命令**：各参考中的 `inspect`、`reference`、`render` 等命令接在 `"<环境 python>" "<skill>/scripts/run.py"` 后；PowerShell 在命令前加 `&`。`--help` 查看命令，子命令的 `--help` 查看参数。启动器自动选择当前安装的代码与已准备环境。
+- **在自己的 Python 脚本中取用函数**：按能力页的 `from ezarch... import ...` 导入，输入已有坐标、Shapely 区域、ezdxf 文档或 Canvas 对象。返回值可继续交给原生库或项目代码，不需要转成 project.yml。
+- **运行 bpy 脚本**：使用 Blender 自带 Python，见 [Blender 运行入口](blender-modeling.md#运行与续改)；它与外围绘图库的 Python 是不同环境。
+
+共享依赖环境或多个安装副本并存时，项目脚本可用下面两行明确导入本次 skill 的代码；将占位路径替换为实际目录：
+
+```python
+import sys
+sys.path.insert(0, r"<skill>/src")
+```
+
+随后按所需接口导入，并用 `"<环境 python>" "<项目脚本.py>"` 运行（PowerShell 前加 `&`）。也可在已有启动配置中把该 `src` 放到 `PYTHONPATH` 最前。环境已安装所需版本且无副本混淆时可直接导入；需要定位版本问题时查看 `ezarch.__file__`。`scripts/run.py` 只接收 EZarch 子命令，不能把任意 Python 文件作为其子命令。
+
 ## 随库环境
 
-从 SKILL.md 所在目录确定 `<skill>`。安装器使用 uv、Python 3.12 和锁文件，在用户的受管总目录准备依赖，不替换系统 Python。相同依赖锁内容、平台和 extras 复用同一依赖环境，只有 skill 自身版本号变化不重建依赖；启动器从当前安装的 src 加载代码，避免多个副本串用代码。旧 skill 内 `.venv` 仍可使用，不自动搬动或删除。
+安装器使用 uv、Python 3.12 和锁文件，在用户的受管总目录准备依赖，不替换系统 Python。相同依赖锁内容、平台和 extras 复用同一依赖环境，只有 skill 自身版本号变化不重建依赖；启动器从当前安装的 src 加载代码。旧 skill 内 `.venv` 仍可使用，不自动搬动或删除。
 
 ```sh
 # macOS；路径含空格时保留引号
@@ -36,18 +53,6 @@ powershell -File "<skill>/scripts/bootstrap.ps1" -Profile core -RuntimeHome "<�
 默认环境不安装 CadQuery/OCCT/VTK；独立 legacy-cad extra 服务于未继续维护的旧接口，不由 bootstrap 启用，确需调用时另行准备兼容环境。rhino3dm 安装包要求 macOS 14+。指定原生依赖使用 wheel，避免在用户电脑临时编译。Blender 使用自己的 Python，外围库留在独立环境。
 
 `scripts/run.py` 查找当前安装绑定的环境，兼容旧 `.venv`。其他兼容环境也可以安装 Python 包后运行 `python -m ezarch.cli` 或导入 API。`doctor` 返回版本、位置和小型实际操作结果；`environment.probe_capability(name)` 可只探测 cad/pdf/geometry/model 中一项，不触发安装。
-
-## 操作入口
-
-`<python> <skill>/scripts/run.py --help` 列出独立命令；每个命令有自己的输入，不存在必须依次执行的总流程。例如：
-
-```text
-reference <PDF|image> --out <dir>
-blender run <script.py> --source <existing.blend> --save <result.blend> --out <dir>
-blender view <model.blend> --spec <view.json> --formats dxf pdf --out <dir>
-render <scene.json|blend|glb> --camera <id|all> --out <dir>
-board <board.yml> --formats pdf --out <dir>
-```
 
 各命令会在所选输出目录写执行记录，这是封装的副产物，不要求用户把它列入交付。真实项目、下载素材和生成文件使用项目目录；安装目录保存工具。
 

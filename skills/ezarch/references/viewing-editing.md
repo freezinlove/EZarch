@@ -29,6 +29,7 @@
 | 对象 | 操作与坐标 |
 |---|---|
 | 已有 CAD | `ezarch.cad.plot(doc, output, scale=None, layout_name="Model", handles=None, region=None, dpi=150, *, margin=10, formats=None)`；region 为源坐标的 xmin/ymin/xmax/ymax，默认 PDF/PNG，可选 SVG。完整前端保留支持的曲线、填充和图块；`skipped` 列出前端跳过项，外部参照、代理对象和字体还受实际依赖影响。 |
+| 临时隔离或高亮 CAD 对象 | [select_entities / render_view](reference-views-editing.md#选择与临时显示) 接收现有文档，在副本上显示所选对象或覆盖显示属性；支持展开图块实例，源文件不被改写。 |
 | 新建 Drawing | `drawing.save(stem, formats=...)` 默认从当前 CAD 实体生成视图，直接改实体或放入组件后再次保存即可更新。细节见 [图纸输出](geometry-drawings.md#保存与继续修改)。 |
 | PDF / 图片 | `inspect` / `reference` 的页面或局部预览；PDF 裁切用 pt，图像用 px，详见 [读取](file-understanding.md)。 |
 | BLEND / 3DM | [模型视图](geometry-drawings.md#blender-模型剖切与投影)、[场景渲染](rendering.md)、[3DM 预览](file-understanding.md)。模型线框、剖切和渲染各自显示不同信息。 |
@@ -36,5 +37,7 @@
 ## 修改与对照
 
 修改是否生效，看从最新源文件重新生成的图，而不是脚本意图、旧截图或计数日志。前后对照时，一致的区域、比例和视角更容易辨认差异；必要的关联视图随源对象一起更新。既看原来的问题是否在图上消失，也留意改动对周边和整体关系的影响。
+
+现有 DXF 可用 [preview_changes](reference-views-editing.md#选定对象替换与前后对照) 生成同范围、同比例的前后视图，并标色实际实体变化；标色帮助定位，不代表错误判定。
 
 看到异常后回到相应实体、参数或表达修改。取图、高亮、差异显示和量测为 AI 提供观察依据，不产生设计合格结论；这里不设置统一评分、固定轮数或必交验收表。

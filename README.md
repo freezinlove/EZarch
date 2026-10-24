@@ -8,7 +8,7 @@ EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达
 
 ## 结构与能力
 
-仓库中的可安装 skill 位于 [skills/ezarch](skills/ezarch/SKILL.md)。SKILL.md 是简短导航，references 按操作展开，src 和 scripts 提供可直接调用的工具，assets 保存字体与轻量制图样式。tests、tools 和发布配置用于维护，不是用户项目流程。
+仓库中的可安装 skill 位于 [skills/ezarch](skills/ezarch/SKILL.md)。SKILL.md 按能力分组导航，references 按需提供接口说明或专业知识，src 和 scripts 提供可直接调用的工具，assets 保存字体与轻量制图样式。组件几何由 Python 函数生成，可写入既有图纸；tests、tools 和发布配置用于维护。
 
 - 绘图与修改：Drawing、ezdxf、原生 CAD/3DM/SVG/BLEND 操作。
 - 几何资源：门窗、家具、墙面、楼梯、电梯、柱和轴网；生成与放置分开，返回可编辑实体。
@@ -46,6 +46,8 @@ Blender 保留工程单位，几何快照和二维助手使用 mm，GLB 显式�
 原生入口可直接运行用户/AI 的脚本：`blender run <script.py> --source <existing.blend> --save <result.blend> --out <dir>`；无 source 时从空场景开始。`blender extract/export/view` 为可选网格交换和出图助手，见 [建模操作](skills/ezarch/references/blender-modeling.md)、[模型出图](skills/ezarch/references/geometry-drawings.md) 与 [社区接入](skills/ezarch/references/blender-ecosystem.md)。完整场景可继续直接使用 bpy，不要求统一 schema。
 
 ## 仓库维护
+
+增加能力时，在相应能力入口链接用途与接口说明，并把相关专业知识放在工具旁便于查找。说明实际导入/命令、输入输出及接入已有对象的方式；共有约定保留一个来源，历史出处和兼容行为放在专题后部。目录按能力组织，不增加必读顺序、强制调用或项目设计步骤。
 
 以下命令用于维护工具，不是用户项目的工作步骤：
 

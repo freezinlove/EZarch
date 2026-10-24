@@ -92,6 +92,7 @@ src/ezarch/references.py
 src/ezarch/selection.py
 references/reference-views-editing.md
 src/ezarch/site_symbols.py
-references/site-typography.md
+references/site-symbols.md
+references/typography.md
 src/ezarch/delivery.py
 references/delivery.md

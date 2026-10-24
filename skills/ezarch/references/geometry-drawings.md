@@ -1,21 +1,18 @@
 # 几何与二维技术图纸
 
-二维 CAD 使用 ezdxf / Drawing，矢量排版使用 SVG / Canvas；模型剖切可接入 [Blender](blender-modeling.md)。
-
+`from ezarch.drafting import Drawing`，用于绘制、标注和导出 DXF；也可绑定现有 ezdxf 布局，继续使用原生实体。项目脚本的运行方法见 [环境接入](environment.md#命令与项目脚本)。矢量排版见 [Canvas](diagrams-boards.md)，模型剖切见 [本页投影入口](#blender-模型剖切与投影)。
 
 ## 独立二维
 
-门框、门扇、开启弧、窗框分格及家具的可编辑几何见 [组件与表达资源](editable-components.md)。生成、表达和放置可分开使用，原生曲线可直接修改；不自动切墙、配家具、标注或规定输出样式。
-
-所选路径或边界生成墙面、区域合并与显式开洞见 [墙面与洞口](wall-regions.md)；梯段、折断线、方向标记及电梯局部几何见 [楼梯与电梯资源](vertical-components.md)。这些入口彼此独立，不要求按某个顺序调用。
-
 `ezarch.drafting.Drawing(bounds, scale=100, title="", number="", margin=12, *, style=None, font=None)` 新建文档，可输出 DXF/PDF/SVG/PNG。bounds、物体坐标以模型 mm 输入；scale 为比例分母，文字和笔宽用纸面 mm。方法包括 poly、text、axis、dimension、chain、level、north、section_mark、index、leader、symbol；签名见 [drafting.py](../src/ezarch/drafting.py)。默认不添加图框或比例尺。样式、字体和组合由任务决定。
 
-轴线、轴号、引折线与柱截面可按需取用 [独立资源](grids-columns.md)，既有 `Drawing.axis` 的行为保留。带文字/形状的复杂线型、块、斜向/径向尺寸等可直接用 ezdxf；修改已有 CAD 可保留原图层、块、布局和样式。见 [中国制图](chinese-drafting.md) 与 [连续修改](edit-existing.md)。
+图元与标注方法返回新增原生实体；`drawing.doc`、`drawing.ms` 是文档和目标布局，可直接接续 ezdxf 操作。已有文档用 [Drawing.from_layout](#绘制到已有文档)。
+
+需要局部几何时，可接入 [门窗](editable-components.md#门窗接口)、[家具](editable-components.md#家具接口与方向)、[墙面与洞口](wall-regions.md)、[楼梯与电梯](vertical-components.md)、[轴线与柱](grids-columns.md)。共同放置方式见 [组件接入](editable-components.md#接入正在使用的画图方式)。带文字/形状的复杂线型、块、径向尺寸等可直接用 ezdxf；源资源保留见 [连续修改](edit-existing.md)，表达知识见 [中国制图](chinese-drafting.md)。
 
 ## 绘图属性与多格式表达
 
-`Drawing.poly/line/rect`、`circle` 和 `text` 支持下述属性；这是这些助手的接口范围，原生 CAD、SVG、其他库与自写代码仍可独立使用。颜色、粗细、线型、孔洞及文字方向由调用者决定，没有固定建筑风格或必须导出的格式。
+`Drawing.poly/line/rect`、`circle` 和 `text` 支持下述属性，分别控制描边、填充、线型和文字方向。
 
 | 参数或能力 | 含义与支持边界 |
 |---|---|
@@ -48,7 +45,7 @@ CAD 的 TEXT、曲线、DIMENSION 等保留在 DXF 中；默认 SVG/PDF 中的 C
 - `style` 仍可调整随库符号与笔宽默认值；颜色、线宽、虚线及孔洞参数见上文。返回原生实体可继续自由修改。
 - 绑定模式不使用 `Drawing.save()`；调用者用 `doc.saveas(...)` 保存完整文档，或按需采用原生渲染/转换。没有只包含新增内容的 Canvas 预览，也不会把它冒充源图完整预览。
 
-位置或方向计算可单独使用 [二维坐标工具](coordinate-transforms.md)。绑定接口不自动转换整张图的坐标、旋转尺寸或处理任意实体 OCS，也不修改既有图元；绘制内容与调用组合由任务决定。
+位置或方向计算可使用 [二维坐标工具](coordinate-transforms.md)。绑定接口不自动转换整张图的坐标或处理任意实体 OCS，也不修改既有图元。
 
 ## Blender 模型剖切与投影
 

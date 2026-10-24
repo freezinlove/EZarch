@@ -14,8 +14,8 @@
 
 ## 已有计算助手
 
-`ezarch.analysis.solar_position(latitude, longitude, when)` 使用带时区时间计算太阳方位/高度；`shadow_vector(height_mm, sun)` 计算水平地面影长。NOAA 近似算法不含复杂地形、反射、大气折射或法定日照时数求解。
+`from ezarch.analysis import solar_position, shadow_vector`，源码见 [analysis.py](../src/ezarch/analysis.py)。`solar_position(latitude, longitude, when)` 接收经纬度与带时区 datetime，返回含方位角/高度角的字典；方位角从地理北顺时针起算。`shadow_vector(height_mm, sun)` 接收物体高度和该太阳结果，返回毫米 `[dx,dy]`，X 为东、Y 为北，太阳在地平线及以下返回 None。向量可用于投影几何或现有绘图脚本；NOAA 近似算法不含复杂地形、反射、大气折射或法定日照时数求解。
 
 需要真实遮阴可投影体量几何；需要采光、能耗或风环境定量结果可选专门求解器。简单箭头和上述太阳助手本身不产生这些模拟结果。选择概念策略表达时，所称结果与实际方法相符即可，不要求补做性能模拟。
 
-地图符号、标注、图例和统计图可直接程序生成 SVG；[矢量与排版工具](diagrams-boards.md) 提供相关入口。无需建立房间表或三维模型。
+地图符号、标注、图例和统计图可接入 [矢量与排版工具](diagrams-boards.md)；道路、树冠与方向几何见 [场地图元](site-symbols.md)。

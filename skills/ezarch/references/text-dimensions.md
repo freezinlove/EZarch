@@ -1,6 +1,12 @@
 # 尺寸端点与字体测量
 
-端点测量、原生 CAD 尺寸、字体发现及文字包络计算。
+端点测量、原生 CAD 尺寸、字体发现及文字包络计算。按所需数据接入项目：
+
+- `from ezarch.measurements import measure_span`：点对与单位 → 长度/投影记录；绘制尺寸用现有 `Drawing.dimension`。
+- `from ezarch.fonts import FontFace, font_info, discover_fonts, measure_text`：字体文件、文字 → 字形信息、进宽与包络。
+- `from ezarch.annotations import text_footprint`：文字测量 → 可继续计算的 Shapely 包络。
+
+实际字体应用、换行和富文本见 [字体与排版](typography.md)，不必为排版先执行测量。
 
 ## 端点与原生尺寸
 
@@ -30,7 +36,7 @@
 
 advance_mm 是水平排列进宽，含空格；ink 是实际字形轮廓的合并包络，metrics 是所用字体 hhea 升部/降部形成的行包络，各返回旋转 corners_mm 及轴对齐 bbox_mm。空字符串进宽为零且没有包络；纯空格有进宽和度量包络、没有墨迹包络。缺字时 aggregate 进宽和包络为 None，missing_characters 列出缺字；glyph_coverage_complete 只说明字符都有字形，不代表排版完成或结果正确。
 
-首版采用 **未塑形的水平字形进宽/轮廓**，不应用字偶距、连字、双向排序或复杂文字塑形；可变字体使用默认轴值。它适用于对应排列方式下的占位计算，不是所有语言的最终排版器。需要塑形、富文本、多行或渲染器特定效果时，可用 HarfBuzz、浏览器或项目既有引擎；这些方法不受本助手支持范围限制。测量本身不检查其他对象，可按需要接入下面的独立占位计算。
+采用 **未塑形的水平字形进宽/轮廓**，不应用字偶距、连字、双向排序或复杂文字塑形；可变字体使用默认轴值。它适用于对应排列方式下的占位计算。需要塑形和富文本时可用 [Canvas.rich_text](typography.md#接入现有画布)、HarfBuzz、浏览器或项目既有引擎。测量本身不检查其他对象，可接入下面的占位计算。
 
 ## 文字几何包络
 

@@ -23,28 +23,44 @@ EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达
 
 ## 按需发现能力
 
-下表按操作连接已有能力；需要某项操作时再展开相应参考，调用参数在源码与 `--help` 中。用途说明用于判断是否调用，操作细节按需读取。
+下面按能力分类，没有调用顺序；只展开当前需要的说明。工具页给出接口、输入输出与接入位置，知识页解释图形所承载的专业关系。现有资源可以局部取用、组合或与原生工具混用。
 
-| 当前操作 | 入口 |
+### 读取资料与继续修改
+
+| 所需能力 | 入口与用途 |
 |---|---|
-| 选页提取、嵌套选择、临时视图或局部替换 | [读取与修改操作](references/reference-views-editing.md) |
-| 读取原文件、定位对象或参考尺度 | [inspect / query、文件预览](references/file-understanding.md) · [参考与尺度](references/design-reference.md) |
-| 绘制、标注或修改二维图纸 | [Drawing 与原生 CAD](references/geometry-drawings.md) · [编辑现有 CAD/3DM/SVG/BLEND](references/edit-existing.md) |
-| 取用可编辑组件、切换彩色或线稿 | [门窗与家具、CAD/Canvas 放置](references/editable-components.md) · [楼梯与电梯](references/vertical-components.md) · [轴网与柱](references/grids-columns.md) |
-| 构造墙面、开洞或处理区域 | [墙面与区域布尔操作](references/wall-regions.md) · [面积与填色](references/area-regions.md) |
-| 理解墙体交接、墙柱关系、轴网定位与支承表达 | [墙、柱与轴网的关系](references/wall-column-grid-relationships.md) |
-| 理解门窗构成、开启或楼层连接的表达 | [门窗知识](references/door-window-representation.md) · [楼梯与电梯知识](references/stairs-and-lifts-representation.md) |
-| 换算坐标、量取几何或文字 | [坐标变换](references/coordinate-transforms.md) · [长度与字体](references/text-dimensions.md) · [局部截面与包络](references/spatial-measurement.md) |
-| 建模、剖切、投影或渲染 | [Blender / bpy](references/blender-modeling.md) · [模型出图](references/geometry-drawings.md#blender-模型剖切与投影) · [剖切与投影知识](references/sections-and-projections.md) · [渲染与图像](references/rendering.md) |
-| 绘制流线与场地图元、指定字体和文字表达 | [场地资源与字体排版](references/site-typography.md) |
-| 理解总平面中的空间联系、植物铺装与图面表达 | [总平面知识](references/site-plan-representation.md) |
-| 制作 SVG、分析图或版面 | [Canvas 与矢量排版](references/diagrams-boards.md) · [地图、太阳与影长](references/site-analysis.md) |
-| 视觉理解、比较方案、发现图面问题或继续修改 | [视图选择与视觉判断](references/viewing-editing.md) |
-| 采用制图规范或查找技术依据 | [制图表达](references/chinese-drafting.md) · [规范适用](references/standards.md) |
-| 批量转换、合订或整理指定成果 | [显式文件列表与交付操作](references/delivery.md) |
-| 获取素材、扩展工具或交换格式 | [素材](references/public-assets.md) · [Blender 扩展](references/blender-ecosystem.md) · [格式交换](references/exchange-verification.md) |
-| 保存项目、管理安装副本 | [文件位置与仓库边界](references/storage-updates.md) |
-| 准备运行环境或排查依赖 | [Windows/macOS 环境与命令入口](references/environment.md) |
+| 读取文件、查找对象、理解参考 | [inspect / query](references/file-understanding.md)：源文件索引和预览；[参考与尺度](references/design-reference.md)：来源、尺度与采用依据 |
+| 选页、选对象、临时高亮、替换与对照 | [参考及局部操作](references/reference-views-editing.md)：接收 PDF 或现有 DXF 对象，输出选定视图、几何或文档副本 |
+| 延续已有 CAD / 3DM / BLEND / SVG | [原生编辑](references/edit-existing.md)：按对象修改，保留原文件中未涉及的内容与资源 |
+
+### 二维绘制与可编辑组件
+
+| 所需能力 | 工具与相关知识 |
+|---|---|
+| 画线面、文字、尺寸与符号 | [Drawing](references/geometry-drawings.md)：新建 DXF 或绑定已有布局；[尺寸端点](references/text-dimensions.md#端点与原生尺寸)：对齐、投影与原生标注 |
+| 画墙、交接与开洞 | [墙面区域](references/wall-regions.md)：路径加厚、布尔与切割；[墙柱关系知识](references/wall-column-grid-relationships.md) |
+| 画门窗、家具和设备 | [门窗](references/editable-components.md#门窗接口) · [家具](references/editable-components.md#家具接口与方向)：参数化局部几何；[门窗表达知识](references/door-window-representation.md) |
+| 画楼梯、电梯、柱与轴网 | [楼梯与电梯](references/vertical-components.md) · [柱和轴线](references/grids-columns.md)；[楼梯电梯知识](references/stairs-and-lifts-representation.md) · [柱网关系知识](references/wall-column-grid-relationships.md) |
+| 放置或改变组件表达 | [组件接入](references/editable-components.md#接入正在使用的画图方式)：写入现有 DXF、Drawing 或 Canvas；[表达样式](references/editable-components.md#同一几何的表达)：共享几何的彩色与线稿 |
+| 画场地、道路、植物与流线 | [场地图元](references/site-symbols.md)：返回可编辑组件；[总平面知识](references/site-plan-representation.md) · [地图、太阳与影长](references/site-analysis.md) |
+| 变换坐标、量取或填色 | [坐标变换](references/coordinate-transforms.md) · [面积与区域填色](references/area-regions.md) · [局部截面与包络](references/spatial-measurement.md) |
+
+### 建模、图像与版面
+
+- **模型与剖切**：[Blender / bpy](references/blender-modeling.md) 提供脚本运行与模型操作；[模型出图](references/geometry-drawings.md#blender-模型剖切与投影) 输出可编辑投影；[剖切与投影知识](references/sections-and-projections.md) 解释建筑表达。
+- **渲染与素材**：[渲染和生成式图像](references/rendering.md)、[公开素材](references/public-assets.md)、[Blender 扩展](references/blender-ecosystem.md)。
+- **分析图与排版**：[Canvas / SVG / board](references/diagrams-boards.md) 接入几何、PDF、图片和文字；[字体与排版](references/typography.md) 说明选字形、富文本和可编辑性；[字体测量](references/text-dimensions.md#字体发现与字形依据) 返回字形信息与包络。
+
+### 制图依据与视觉判断
+
+- [制图表达](references/chinese-drafting.md)：图纸用途、比例、表达深度及随库样式；[规范适用](references/standards.md)：查询适用依据。构件与场地知识直接链接在对应工具旁。
+- [视觉理解与判断](references/viewing-editing.md)：理解参考、推敲与比较方案、主动发现图面异常、选择视图并确认修改效果；包含实际取图入口。
+
+### 运行环境与文件
+
+- [环境与接入方式](references/environment.md)：运行独立命令、在项目 Python 脚本中导入 API、复用依赖与排查安装。
+- [格式交换](references/exchange-verification.md) 说明转换与信息保留边界；[文件整理](references/delivery.md) 操作明确选择的文件，提供批量转换、PDF 合订和 ZIP 打包。
+- [位置与更新](references/storage-updates.md)：项目与工具分开存放、安装副本更新与回退。
 
 ## 使用边界
 

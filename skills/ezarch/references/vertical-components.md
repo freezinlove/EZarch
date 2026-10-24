@@ -1,6 +1,6 @@
 # 楼梯、电梯的局部几何资源
 
-`ezarch.vertical_symbols` 返回局部 mm 的可编辑 `Symbol`，包含独立梯段、方向标记、折断线和电梯局部几何，沿用 [组件的表达与放置](editable-components.md)。
+`from ezarch.vertical_symbols import stair_flight_symbol, stair_break_symbol, direction_symbol, lift_symbol`。各函数返回局部 mm 的 `Symbol`，供现有 DXF、Drawing 或 Canvas [放置与继续编辑](editable-components.md#接入正在使用的画图方式)；源码见 [vertical_symbols.py](../src/ezarch/vertical_symbols.py)。
 
 楼层连接、级数与踏面、井道与入口等专业关系见 [楼梯与电梯的空间关系及表达](stairs-and-lifts-representation.md)。
 
@@ -25,7 +25,7 @@
 - panel_count 为正整数，门板沿跨度等分；panel_depth 为跨壁厚方向尺寸，panel_inset 从指定外边向内量。两者需落在井壁厚度范围内；这些是本函数的矩形板件位置参数，不代表所有电梯门构造。
 - shaft_fill 可指定井壁填充角色；空值只有轮廓。全部描边使用 outline 角色，返回原生实体仍可单独调整。锚点为 origin、car_center、entrance_start/end/center，名义包络为井外边界。
 
-可以只取其中的构件，也可在返回对象上改造或另行构造异形井、不同轿厢、门系统。工具不选择厂商设备、不补门厅或路线，不自动编号、标尺寸或保存文件，也不判定无障碍、消防和设备安装条件。
+返回对象可以继续修改或组合；设备选型、门厅、路线、编号和尺寸需要项目提供。该函数仅生成矩形构件，不核定设备安装、无障碍或消防条件。
 
 ## 提取依据
 

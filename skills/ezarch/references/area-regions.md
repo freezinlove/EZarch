@@ -1,6 +1,6 @@
 # 所选区域的面积、覆盖与填色
 
-面积、扣除与覆盖几何计算，以及独立区域填色。输入普通 Shapely 几何，返回数值和区域，可与 CAD、SVG 或项目脚本衔接。
+面积、扣除与覆盖几何计算，以及独立区域填色。`from ezarch.measurements import measure_area, coverage` 接收 Shapely 几何，返回数值和区域；`from ezarch.diagrams import fill_regions` 把已有区域加入 Canvas。CAD 可用 [polygon_symbol](wall-regions.md#转成可编辑图元) 或 Drawing.poly 接续同一几何。
 
 ## 面积与扣除
 
@@ -26,10 +26,12 @@ transform 是可选的六系数仿射变换，转换后的坐标为 Canvas 纸�
 
 画布大小、文字、保存位置和 formats 使用 [Canvas 独立能力](diagrams-boards.md)。原生 CAD 的区域填充可用现有 `polygon_symbol`/`place_symbol` 或 Drawing.poly，见 [组件资源](editable-components.md)，无需经过 Canvas。
 
-旧 `generate_diagrams(project, out, level=None, *, kinds=None, formats=None)` 和 `diagram --kinds ... --formats ...` 保留 project.yml 兼容：kinds 可选择 program/circulation/solid-void/areas，省略仍产生原有四项；这是旧生成器支持的选项，不是分析图的类型全集。任意内容可直接填色或另用其他表达能力。kinds 空列表不输出文件；指定一项只生成该图及报告，不删除目录中历史文件。旧面积图标题已改为边界面积。
-
-`brief` 新增 interior_boundary_area_m2；interior_net_area_m2 保留为兼容别名，并注明未额外扣除。其每房间三位小数、同层重叠阈值等旧行为仍在 [读取参考](design-reference.md#面积与重叠助手) 说明；这些规则不作用于独立 measure_area。
-
 ## 来源和验证范围
 
 区域差集、覆盖及带孔填充来源于住宅真实任务和既有生成器；去掉了固定退界/墙厚、房间类别映射、剩余区域归类、配色与页面策略。独立接口、单位/输入校验和作用范围记录是本轮补充。历史几何数值核对与通用旋转、孔洞、扣除并集、单位、空选择测试分别验证；它们不证明历史面积口径正确或任何项目必需这些分析。
+
+## 旧项目数据接口
+
+`ezarch.diagrams.generate_diagrams(project, out, level=None, *, kinds=None, formats=None)` 与 `diagram` 命令保留 project.yml 兼容；选项和输出见 [旧房间图例](diagrams-boards.md#旧房间图例接口)。kinds 空列表不输出文件，指定一项仅生成该图及报告，不删除历史文件。旧面积图标题为边界面积。
+
+`brief` 的 interior_boundary_area_m2 与兼容别名 interior_net_area_m2 均未额外扣除；舍入和重叠行为见 [旧面积助手](design-reference.md#面积与重叠助手)，不作用于独立 measure_area。
