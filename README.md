@@ -54,6 +54,7 @@ sh skills/ezarch/scripts/bootstrap.sh --profile dev --home "<工具总目录>"
 # 使用 bootstrap 返回的 python 路径；旧 .venv 也仍可使用
 "<环境 python>" -m pytest -q tests
 "<环境 python>" -m ruff check --config ruff.toml skills/ezarch/src skills/ezarch/scripts tests tools
+"<环境 python>" tools/package_skill.py --check
 "<环境 python>" tools/package_skill.py --out ../EZarch-dist
 ```
 
@@ -61,7 +62,9 @@ sh skills/ezarch/scripts/bootstrap.sh --profile dev --home "<工具总目录>"
 
 正式 ZIP 内含版本和逐文件摘要，使用时可轻提示新版；agent 可代办准备、启用和回退。启用后的 skill 需重新加载，自动更新偏好不会把下载完成误报为当前对话已换版。按版本标签发布的工作流已提供，只有实际发布后的版本才能被用户查询到。
 
-ZIP 的公开文件由 `tools/skill-files.txt` 明确列出；wheel 的文件在 `pyproject.toml` 中逐项指定。增加发行文件时更新相应清单。打包不扫描额外项目文件，所选文件及其父目录中的软链接/Windows junction 会被拒绝；这些维护配置不参与用户作图流程。
+ZIP 的公开文件由 `tools/skill-files.txt` 明确列出；wheel 的文件在 `pyproject.toml` 中逐项指定。增加发行文件时更新相应清单。`--check` 与实际打包都检查：已列文件存在、Markdown 本地链接及图片引用的目标包含在包内、wheel 构建输入包含在清单中、已声明的 `src/ezarch` Python 模块也进入 wheel；在 Git 工作区还检查所有已跟踪（含已暂存新增）的 skill 文件是否漏列。CI 在准备绘图环境前执行同一检查，标签发布也通过打包入口检查。遗漏会指出文件或引用位置并停止打包，不自动把未知内容纳入公开发行。
+
+未跟踪且未被引用的临时文件仍不会打包；无 Git 的源码压缩包仍能检查链接与构建输入，但不能识别未声明、未引用的新文件。检查不解释任意程序的动态资源加载，也不验证 AI 是否会使用知识。所选文件及其父目录中的软链接/Windows junction 会被拒绝。这些是维护和发布保障，不参与用户作图流程。
 
 ## License
 
