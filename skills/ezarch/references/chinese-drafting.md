@@ -31,7 +31,7 @@ GB/T 50104—2010 的目录另列图线与比例、图例、图样画法和尺�
 
 概念设定、原图事实和已核定构造有不同依据，表达精细程度不能把前者变成后者。方案中的支承与构件信息也不必全部推迟到施工图；对应设计深度文件的已核对范围见 [墙柱知识](wall-column-grid-relationships.md#资料状态与表达深度)。
 
-需要理解具体线条含义时，按问题查阅 [门窗表达](door-window-representation.md)、[楼梯与电梯表达](stairs-and-lifts-representation.md)或 [剖切与投影](sections-and-projections.md)。这些关系说明不扩展上文对标准正文的核对范围。
+需要理解具体线条含义时，按问题查阅 [门窗表达](door-window-representation.md)、[楼梯与电梯表达](stairs-and-lifts-representation.md)、[剖切与投影](sections-and-projections.md)或 [总平面的空间关系与表达](site-plan-representation.md)。这些关系说明不扩展上文对标准正文的核对范围。
 
 ## 当前助手的默认值与可调整项
 

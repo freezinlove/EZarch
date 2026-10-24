@@ -1,5 +1,7 @@
 # 流线、场地图元和字体排版
 
+入口与路径、种植与铺装、建筑轮廓和图面层次的关系见 [总平面知识](site-plan-representation.md)。下文提供承接所选几何与表达的工具。
+
 ## 可编辑场地图元
 
 `ezarch.site_symbols` 返回既有 Symbol，可用 Drawing.symbol、Canvas.symbol 或 place_symbol 放置，颜色与纯线稿共用几何。局部长度使用 mm，不包含场地安排、交通规划或自动布树。

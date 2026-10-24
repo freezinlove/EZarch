@@ -2,6 +2,8 @@
 
 地图资料、太阳位置与影长计算，以及 SVG / 地理数据的表达方法。
 
+场地空间关系、建筑投影、示意阴影与总平面阅读见 [总平面知识](site-plan-representation.md)。
+
 ## 数据与坐标
 
 用户提供的规划图、调查或现有数据可直接作为输入。需要补充公开道路/建筑时，可查 OpenStreetMap：[署名](https://www.openstreetmap.org/copyright)、[Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API)。查询范围和使用方式受对应服务规则约束。OSM 只是示例来源；政府规划、统计、论文、其他地图和用户资料都可按问题选择，必要时主动联网扩展资料与方法。
