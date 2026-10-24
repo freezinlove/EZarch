@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ezarch"
-version = "0.6.0"
+version = "0.7.0"
 description = "Optional tools and infrastructure for architectural drawings, models and visual expression"
 requires-python = ">=3.12,<3.13"
 license = "AGPL-3.0-or-later"

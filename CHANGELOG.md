@@ -2,15 +2,12 @@
 
 ## Unreleased
 
+## 0.7.0
 - Add explicit-list batch CAD conversion with per-file status and hash-verified resume, ordered PDF combination/bookmarks, and selected-file ZIP packaging.
-
 - Add editable route/direction, road-boundary and canopy primitives. Add per-text/role fonts, TTC face export, shaped HTML text boxes, SVG composition and explicit editable/outlined SVG text.
-
 - Add selected PDF page/crop exports, explicit vector-to-CAD mapping with unsupported clipping reported, affine control-point fitting, nested entity selection, temporary view styles, version-bound replacement and same-extent change previews.
-
 - Add release manifests, cached nonblocking update notices, optional background preparation, explicit safe activation/reload, local-change protection, rollback and interrupted-transaction recovery. Add tagged release packaging workflow.
-
-- Add user-selected shared runtime locations, dependency reuse, isolated caches, capability probes and recoverable preparation. Keep old environments and make system font registration explicit.
+- Add user-selected shared runtime locations, dependency reuse across code-only releases, isolated caches, capability probes and recoverable preparation. Keep old environments and make system font registration explicit.
 - Protect normal output entry points from accidental writes into tool code; provide opt-in staged/push Git boundary checks without changing existing hooks.
 
 - Reorganize the entry into a short capability index and focused operation references. Replace the general design-judgment expansion with concise visual guidance linked to actual drawings, model views and edits.
@@ -18,7 +15,7 @@
 - Render new Drawing exports from current CAD entities by default, including native edits and placed components. CAD text remains editable in DXF; SVG/PDF views use outlines. Explicit `view_source="canvas"` retains recorded Canvas exports, including editable text; it does not track native CAD changes. Legacy project view generation retains this recorded mode.
 - Connect the existing component geometry to `Drawing.symbol` and `Canvas.symbol`; `Canvas.cad` refreshes embedded CAD during saving. Extend CAD plotting to SVG and preserve exact physical page dimensions and explicitly selected TTF/OTF fonts.
 - Remove automatic overlap rejection from board composition and the legacy area brief; allow page cropping and impose an image PPI floor only when explicitly supplied.
-- Retain colors, lineweights, dash patterns, polygon holes, text positioning, coordinate transforms, measurements and native Drawing binding. Correct outdated interface descriptions and release manifests; dependency installation and update mechanisms are unchanged.
+- Retain colors, lineweights, dash patterns, polygon holes, text positioning, coordinate transforms, measurements and native Drawing binding. Correct outdated interface descriptions and release manifests.
 
 ## 0.6.0
 
