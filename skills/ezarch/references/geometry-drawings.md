@@ -52,6 +52,8 @@ CAD 的 TEXT、曲线、DIMENSION 等保留在 DXF 中；默认 SVG/PDF 中的 C
 
 ## Blender 模型剖切与投影
 
+剖切位置、可见轮廓、关联视图及建筑表达的知识见 [剖切与投影](sections-and-projections.md)；这些关系也适用于直接绘制的二维图纸。
+
 可直接写 bpy/几何算法，也可用 `blender view <source.blend> --spec <view.json> --formats dxf pdf --out <dir>`。支持 `--objects`、`--collections`、`--unit-scale-m`，筛选语义见建模文档。JSON 只配置这次可选视图助手，不是统一项目文件。
 
 | 视图字段 | 此助手的含义 |

@@ -2,6 +2,8 @@
 
 `ezarch.vertical_symbols` 返回局部 mm 的可编辑 `Symbol`，包含独立梯段、方向标记、折断线和电梯局部几何，沿用 [组件的表达与放置](editable-components.md)。
 
+楼层连接、级数与踏面、井道与入口等专业关系见 [楼梯与电梯的空间关系及表达](stairs-and-lifts-representation.md)。
+
 ## 梯段、折断和方向
 
 | 接口 | 显式几何与边界 |

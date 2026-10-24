@@ -37,6 +37,8 @@ Canvas 也可用 `canvas.cad(doc, origin=..., scale=..., layout_name="Model", ha
 
 ## 门窗接口
 
+洞口、框扇、开启方式、分格及尺寸口径见 [门窗的构成与图纸表达](door-window-representation.md)。下表说明当前几何资源的参数。
+
 | 接口 | 几何参数与边界 |
 |---|---|
 | `door_symbol(width, *, leaf_thickness, frame_width, frame_depth, opening_angle_deg=90, frame=True, leaf=True, swing=True)` | 单扇平开门；铰点 `(0,0)`，关闭端 `(width,0)`，正角逆时针开启、负角顺时针，范围 ±180°。框、扇、弧可分别启用。门框中心在跨度两端，扇沿开启方向，弧为原生 ARC。锚点 `hinge/closed_end/leaf_end`；width 是铰点跨度，不保证等于净通行宽度。 |

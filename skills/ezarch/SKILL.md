@@ -33,8 +33,9 @@ EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达
 | 取用可编辑组件、切换彩色或线稿 | [门窗与家具、CAD/Canvas 放置](references/editable-components.md) · [楼梯与电梯](references/vertical-components.md) · [轴网与柱](references/grids-columns.md) |
 | 构造墙面、开洞或处理区域 | [墙面与区域布尔操作](references/wall-regions.md) · [面积与填色](references/area-regions.md) |
 | 理解墙体交接、墙柱关系、轴网定位与支承表达 | [墙、柱与轴网的关系](references/wall-column-grid-relationships.md) |
+| 理解门窗构成、开启或楼层连接的表达 | [门窗知识](references/door-window-representation.md) · [楼梯与电梯知识](references/stairs-and-lifts-representation.md) |
 | 换算坐标、量取几何或文字 | [坐标变换](references/coordinate-transforms.md) · [长度与字体](references/text-dimensions.md) · [局部截面与包络](references/spatial-measurement.md) |
-| 建模、剖切、投影或渲染 | [Blender / bpy](references/blender-modeling.md) · [模型出图](references/geometry-drawings.md#blender-模型剖切与投影) · [渲染与图像](references/rendering.md) |
+| 建模、剖切、投影或渲染 | [Blender / bpy](references/blender-modeling.md) · [模型出图](references/geometry-drawings.md#blender-模型剖切与投影) · [剖切与投影知识](references/sections-and-projections.md) · [渲染与图像](references/rendering.md) |
 | 绘制流线与场地图元、指定字体和文字表达 | [场地资源与字体排版](references/site-typography.md) |
 | 制作 SVG、分析图或版面 | [Canvas 与矢量排版](references/diagrams-boards.md) · [地图、太阳与影长](references/site-analysis.md) |
 | 视觉理解、比较方案、发现图面问题或继续修改 | [视图选择与视觉判断](references/viewing-editing.md) |
