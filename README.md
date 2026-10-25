@@ -11,6 +11,7 @@ EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达
 仓库中的可安装 skill 位于 [skills/ezarch](skills/ezarch/SKILL.md)。SKILL.md 按能力分组导航，references 按需提供接口说明或专业知识，src 和 scripts 提供可直接调用的工具，assets 保存字体与轻量制图样式。组件几何由 Python 函数生成，可写入既有图纸；tests、tools 和发布配置用于维护。
 
 - 绘图与修改：Drawing、ezdxf、原生 CAD/3DM/SVG/BLEND 操作。
+- Rhino 原生操作：[官方 MCP 接入](skills/ezarch/references/rhino-mcp.md)，连接当前文档、调用原生 API、操作 Grasshopper 和获取视口图像。
 - 几何资源：门窗、家具、墙面、楼梯、电梯、柱和轴网；生成与放置分开，返回可编辑实体。
 - 看图与排版：当前 CAD 的 PDF/SVG/PNG 视图，Canvas 的 CAD/组件接入，Blender 视图和渲染。
 - 工具知识：单位、坐标、尺寸、字体、规范依据、格式交换和素材接入。
@@ -39,7 +40,7 @@ core 含独立二维、参考提取、分析和排版助手；draft 保持独立
 
 ## 兼容与技术边界
 
-DWG/DXF 通过可选免费闭源 ODA 转换器双向适配。随库重点支持 Blender 原生三维能力，rhino3dm 保留原生对象读取/局部修改；Blender 可导出网格 3DM、GLB 和 DAE。Rhino 曲面导入通常需要文件内的显示网格，缺失网格的复杂 BRep 不能保证完整转换；网格不冒充 NURBS/BRep。旧 CadQuery/STEP 路线目前未继续维护，需要独立 legacy-cad 依赖，不由默认安装启用。商业应用控制、SKP 写入和 IFC 未提供随库适配；这不限制任务使用其他可用工具。
+DWG/DXF 通过可选免费闭源 ODA 转换器双向适配。三维可使用 Blender 原生 API、外部 Rhino 官方 MCP 或离线 rhino3dm，按任务与实际环境选用。Rhino MCP 需要已安装、获许可且兼容的 Rhino，不依赖 EZarch 的 Blender/Python 环境，也不随 skill 捆绑。Blender 可导出网格 3DM、GLB 和 DAE；Rhino 曲面导入 Blender 通常需要文件内的显示网格，缺失网格的复杂 BRep 不能保证完整转换，网格不冒充 NURBS/BRep。旧 CadQuery/STEP 路线目前未继续维护，需要独立 legacy-cad 依赖，不由默认安装启用。SketchUp/AutoCAD 应用控制、SKP 写入和 IFC 未提供随库适配。
 
 Blender 保留工程单位，几何快照和二维助手使用 mm，GLB 显式转换为 m；自由 SVG、地图或其他程序不必采用同一坐标体系。图纸缩放、字体和转换损失见 [格式说明](skills/ezarch/references/exchange-verification.md)。开放库回读不等于在目标商业软件中实际打开验收。
 

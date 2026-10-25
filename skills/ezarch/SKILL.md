@@ -48,6 +48,7 @@ EZarch 是供 AI 开展建筑与空间设计时使用的制图、建模与表达
 ### 建模、图像与版面
 
 - **模型与剖切**：[Blender / bpy](references/blender-modeling.md) 提供脚本运行与模型操作；[模型出图](references/geometry-drawings.md#blender-模型剖切与投影) 输出可编辑投影；[立面、剖切与投影知识](references/sections-and-projections.md) 解释建筑表达。
+- **Rhino 原生操作**：[官方 MCP](references/rhino-mcp.md) 连接当前 Rhino 文档，调用原生建模、Grasshopper 与视口能力；仅需离线读写 3DM 时可用 [rhino3dm](references/edit-existing.md#rhino-文件与精确实体)。
 - **渲染与素材**：[渲染和生成式图像](references/rendering.md)、[公开素材](references/public-assets.md)、[Blender 扩展](references/blender-ecosystem.md)。
 - **分析图与排版**：[Canvas / SVG / board](references/diagrams-boards.md) 接入几何、PDF、图片和文字；[功能分区与交通流线知识](references/analysis-representation.md) 解释区域、路线与实际空间的对应；[字体与排版](references/typography.md) 说明选字形、富文本和可编辑性；[字体测量](references/text-dimensions.md#字体发现与字形依据) 返回字形信息与包络。
 

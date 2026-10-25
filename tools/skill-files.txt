@@ -35,6 +35,8 @@ references/text-dimensions.md
 references/project-data.md
 references/public-assets.md
 references/rendering.md
+references/rhino-mcp.md
+references/rhino-mcp-clients.md
 references/site-analysis.md
 references/spatial-measurement.md
 scripts/blender_scene.py

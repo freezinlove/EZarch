@@ -19,6 +19,10 @@ sys.path.insert(0, r"<skill>/src")
 
 随后按所需接口导入，并用 `"<环境 python>" "<项目脚本.py>"` 运行（PowerShell 前加 `&`）。也可在已有启动配置中把该 `src` 放到 `PYTHONPATH` 最前。环境已安装所需版本且无副本混淆时可直接导入；需要定位版本问题时查看 `ezarch.__file__`。`scripts/run.py` 只接收 EZarch 子命令，不能把任意 Python 文件作为其子命令。
 
+## Rhino 应用与官方 MCP
+
+[Rhino 官方 MCP](rhino-mcp.md) 使用 Rhino 自身的插件与运行时，独立于下述 Python/Blender 环境；安装、兼容性与连接排障见该专题。离线 3DM 文件接口使用 model 依赖。
+
 ## 随库环境
 
 安装器使用 uv、Python 3.12 和锁文件，在用户的受管总目录准备依赖，不替换系统 Python。相同依赖锁内容、平台和 extras 复用同一依赖环境，只有 skill 自身版本号变化不重建依赖；启动器从当前安装的 src 加载代码。旧 skill 内 `.venv` 仍可使用，不自动搬动或删除。
