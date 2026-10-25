@@ -81,7 +81,7 @@ def test_repository_release_list_resolves_and_includes_dependencies():
     names = dict(validate_release(root / "skills/ezarch", root / "tools/skill-files.txt"))
     assert {"LICENSE", "THIRD_PARTY_NOTICES.md", "SKILL.md", "pyproject.toml", "uv.lock",
             "assets/fonts/COPYING", "assets/fonts/FandolFang-Regular.otf",
-            "assets/fonts/EZarchFang.ttf", "scripts/build_font.py"} <= names.keys()
+            "assets/fonts/EZarchFang.ttf", "assets/fonts/SOURCE.md"} <= names.keys()
 
 
 def test_wheel_inputs_are_individual_declared_release_files():

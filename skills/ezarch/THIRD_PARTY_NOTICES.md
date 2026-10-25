@@ -22,7 +22,7 @@ EZarch's own code is AGPL-3.0-or-later. Dependencies are obtained by the install
 
 ## Included font source and derivative
 
-`assets/fonts/FandolFang-Regular.otf` is the original Fandol 0.3 font. Its upstream COPYING, README and source attribution accompany it. It is distributed under GPL with the upstream font embedding exception. `EZarchFang.ttf` is a renamed TrueType-outline derivative produced by `scripts/build_font.py`; retain the same notices. Both source and build script are included. No Microsoft or other proprietary FangSong font is bundled.
+`assets/fonts/FandolFang-Regular.otf` is the original Fandol 0.3 font. Its upstream COPYING, README and source attribution accompany it. It is distributed under GPL with the upstream font embedding exception. `EZarchFang.ttf` is a renamed TrueType-outline derivative; retain the same notices. Both fonts are included. The rebuild script is maintained at `tools/build_font.py` in the repository and is available in the [corresponding release's source archive](https://github.com/freezinlove/EZarch/releases). No Microsoft or other proprietary FangSong font is bundled.
 
 ## Architectural references and user outputs
 

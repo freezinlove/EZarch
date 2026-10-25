@@ -1,6 +1,7 @@
-name: Windows and macOS checks
+name: Skill package checks
 on:
   push:
+    branches: ['**']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -15,43 +16,3 @@ jobs:
           python-version: '3.12'
       - name: Check release files and local document links
         run: python tools/package_skill.py --check
-  verify:
-    needs: release-integrity
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-15, macos-15-intel]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: '0.11.26'
-      - name: Locked runtime
-        run: uv sync --project skills/ezarch --python 3.12 --frozen --extra model --extra dev
-      - name: Configure tool locations
-        shell: bash
-        run: |
-          echo "EZARCH_HOME=$RUNNER_TEMP/ezarch-runtime" >> "$GITHUB_ENV"
-          echo "EZARCH_CONFIG=$RUNNER_TEMP/ezarch-settings.json" >> "$GITHUB_ENV"
-      - name: Blender integration setup
-        run: uv run --project skills/ezarch --no-sync python -c "from ezarch.environment import install_blender; print(install_blender())"
-      - name: Optional DWG converter integration setup
-        run: uv run --project skills/ezarch --no-sync python -c "from ezarch.environment import install_oda; print(install_oda())"
-      - name: Unit and interoperability tests
-        env:
-          EZARCH_TEST_ODA: "1"
-          EZARCH_TEST_BLENDER: "1"
-          PYTHONUNBUFFERED: "1"
-        run: uv run --project skills/ezarch --no-sync python -m pytest -v -o faulthandler_timeout=120 tests
-      - name: Lint
-        run: uv run --project skills/ezarch --no-sync ruff check --config ruff.toml skills/ezarch/src skills/ezarch/scripts tests tools
-      - name: Package self-contained skill
-        run: uv run --project skills/ezarch --no-sync python tools/package_skill.py --out dist
-      - name: Build wheel
-        run: uv build --project skills/ezarch --wheel --out-dir dist
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ezarch-${{ matrix.os }}
-          path: dist/

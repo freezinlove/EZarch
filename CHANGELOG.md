@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.7.1
+
+- Limit routine CI to package completeness and local links; keep tests and wheel builds available on demand. Version tags run the release workflow without duplicating routine CI.
+- Remove the unused Blender verification script and move font rebuilding to repository tools, retaining bundled fonts and source notices.
+- Preserve drafting tools, components, knowledge, installation, updates and Python package compatibility.
+
 ## 0.7.0
 - Add explicit-list batch CAD conversion with per-file status and hash-verified resume, ordered PDF combination/bookmarks, and selected-file ZIP packaging.
 - Add editable route/direction, road-boundary and canopy primitives. Add per-text/role fonts, TTC face export, shaped HTML text boxes, SVG composition and explicit editable/outlined SVG text.

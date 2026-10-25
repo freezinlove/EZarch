@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ezarch"
-version = "0.7.0"
+version = "0.7.1"
 description = "Optional tools and infrastructure for architectural drawings, models and visual expression"
 requires-python = ">=3.12,<3.13"
 license = "AGPL-3.0-or-later"
@@ -59,9 +59,7 @@ only-include = [
 "assets/fonts/FandolFang-Regular.otf" = "ezarch/resources/assets/fonts/FandolFang-Regular.otf"
 "assets/fonts/EZarchFang.ttf" = "ezarch/resources/assets/fonts/EZarchFang.ttf"
 "THIRD_PARTY_NOTICES.md" = "ezarch/resources/THIRD_PARTY_NOTICES.md"
-"scripts/build_font.py" = "ezarch/resources/scripts/build_font.py"
 "scripts/blender_scene.py" = "ezarch/resources/scripts/blender_scene.py"
-"scripts/blender_verify.py" = "ezarch/resources/scripts/blender_verify.py"
 "scripts/blender_inspect.py" = "ezarch/resources/scripts/blender_inspect.py"
 "scripts/blender_bridge.py" = "ezarch/resources/scripts/blender_bridge.py"
 

@@ -40,12 +40,10 @@ references/rhino-mcp-clients.md
 references/site-analysis.md
 references/spatial-measurement.md
 scripts/blender_scene.py
-scripts/blender_verify.py
 scripts/bootstrap.ps1
 scripts/bootstrap.py
 scripts/bootstrap.sh
 scripts/build_hooks.py
-scripts/build_font.py
 scripts/run.py
 src/ezarch/__init__.py
 src/ezarch/analysis.py

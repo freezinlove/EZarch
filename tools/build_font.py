@@ -2,6 +2,7 @@
 
 Retains the upstream GPL/font-exception notices. Original CFF OTF is unmodified.
 """
+import argparse
 from pathlib import Path
 
 from fontTools.fontBuilder import FontBuilder
@@ -9,7 +10,10 @@ from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
 
-root = Path(__file__).resolve().parents[1] / "assets/fonts"
+root = Path(__file__).resolve().parents[1] / "skills/ezarch/assets/fonts"
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--output', type=Path, default=root / 'EZarchFang.ttf')
+args = parser.parse_args()
 font = TTFont(root / "FandolFang-Regular.otf")
 glyph_set = font.getGlyphSet()
 glyphs = {}
@@ -28,7 +32,7 @@ builder.setupPost()
 for name_id, value in {1: "EZarch Fang", 2: "Regular", 3: "EZarchFang-0.3-ttf-1", 4: "EZarch Fang Regular", 6: "EZarchFang-Regular"}.items():
     font["name"].setName(value, name_id, 3, 1, 0x409)
     font["name"].setName(value, name_id, 1, 0, 0)
-font.save(root / "EZarchFang.ttf")
-check = TTFont(root / "EZarchFang.ttf")
+font.save(args.output)
+check = TTFont(args.output)
 assert "glyf" in check and "CFF " not in check
 print(f"Built TrueType font: {len(check.getGlyphOrder())} glyphs")

@@ -34,7 +34,7 @@ powershell -File skills/ezarch/scripts/bootstrap.ps1 -Profile core -RuntimeHome 
 
 core 含独立二维、参考提取、分析和排版助手；draft 保持独立二维；model 增加 Blender 与网格/3DM 交换库；render 检测或安装 Blender；all 安装建模与渲染能力。安装配置增量生效；依赖、下载和可控临时文件位于用户选定的工具总目录，相同依赖可跨安装副本复用，不修改系统 Python。Windows 首次下载前需选位置，已有偏好继续沿用。具体操作和其他运行入口见 [环境说明](skills/ezarch/references/environment.md)，文件保护和轻量更新见 [安装与版本管理](skills/ezarch/references/storage-updates.md)。这些安装项不意味着任务需要使用所有工具。
 
-包含 rhino3dm 的建模环境要求 macOS 14 或更高版本；Windows 目标为 x64。原生 Python 依赖使用预编译安装包，Windows 和 macOS 的自动测试结果见本仓库 Actions。
+包含 rhino3dm 的建模环境要求 macOS 14 或更高版本；Windows 目标为 x64。原生 Python 依赖使用预编译安装包。
 
 分发包含脚本、Python 源码、依赖锁、轻量二维规则和开放仿宋字体；运行依赖按目标机器准备。三维模型、PBR 与 HDRI 从公开可读可下载来源按项目获取，不捆绑素材库。字体、图块和样式可按用户要求选择，仿宋不是所有图面的指定字体。
 
@@ -48,24 +48,28 @@ Blender 保留工程单位，几何快照和二维助手使用 mm，GLB 显式�
 
 ## 仓库维护
 
-增加能力时，在相应能力入口链接用途与接口说明，并把相关专业知识放在工具旁便于查找。说明实际导入/命令、输入输出及接入已有对象的方式；共有约定保留一个来源，历史出处和兼容行为放在专题后部。目录按能力组织，不增加必读顺序、强制调用或项目设计步骤。
+维护原则见 [AGENTS.md](AGENTS.md)。按修改范围选择相关测试；涉及安装或平台差异时验证对应环境。
 
-以下命令用于维护工具，不是用户项目的工作步骤：
+需要准备开发依赖时使用 dev profile；以下维护命令按需选用：
 
 ```sh
 sh skills/ezarch/scripts/bootstrap.sh --profile dev --home "<工具总目录>"
 # 使用 bootstrap 返回的 python 路径；旧 .venv 也仍可使用
-"<环境 python>" -m pytest -q tests
-"<环境 python>" -m ruff check --config ruff.toml skills/ezarch/src skills/ezarch/scripts tests tools
+"<环境 python>" -m pytest -q "<相关测试文件或目录>"
+"<环境 python>" -m ruff check --config ruff.toml "<修改的 Python 文件>"
 "<环境 python>" tools/package_skill.py --check
 "<环境 python>" tools/package_skill.py --out ../EZarch-dist
 ```
 
-发布配置仅覆盖 Windows/macOS，自动检查结果见本仓库 Actions。开发验证、用户资料、下载素材和项目成果位于库外；项目规划和实施记录保留在本地，不随仓库发布。
+普通分支提交和 PR 只自动检查发行清单、本地链接与构建输入，不安装绘图软件或运行全量测试。版本标签单独触发发布打包。需要全量测试时将 pytest 目标设为 `tests`；实际 Blender 集成测试由 `EZARCH_TEST_BLENDER=1` 启用，`EZARCH_TEST_ODA=1` 可要求 ODA 必须可用，使用已准备的程序。
+
+Python 包构建仍可手动运行 `uv build --project skills/ezarch --wheel --out-dir ../EZarch-dist`。字体重建使用 `tools/build_font.py`，可传 `--output <字体路径>`；正常作图使用随包字体。
+
+开发验证、用户资料、下载素材和项目成果位于库外；项目规划和实施记录保留在本地，不随仓库发布。
 
 正式 ZIP 内含版本和逐文件摘要，使用时可轻提示新版；agent 可代办准备、启用和回退。启用后的 skill 需重新加载，自动更新偏好不会把下载完成误报为当前对话已换版。按版本标签发布的工作流已提供，只有实际发布后的版本才能被用户查询到。
 
-ZIP 的公开文件由 `tools/skill-files.txt` 明确列出；wheel 的文件在 `pyproject.toml` 中逐项指定。增加发行文件时更新相应清单。`--check` 与实际打包都检查：已列文件存在、Markdown 本地链接及图片引用的目标包含在包内、wheel 构建输入包含在清单中、已声明的 `src/ezarch` Python 模块也进入 wheel；在 Git 工作区还检查所有已跟踪（含已暂存新增）的 skill 文件是否漏列。CI 在准备绘图环境前执行同一检查，标签发布也通过打包入口检查。遗漏会指出文件或引用位置并停止打包，不自动把未知内容纳入公开发行。
+ZIP 的公开文件由 `tools/skill-files.txt` 明确列出；wheel 的文件在 `pyproject.toml` 中逐项指定。增加发行文件时更新相应清单。`--check` 与实际打包都检查：已列文件存在、Markdown 本地链接及图片引用的目标包含在包内、wheel 构建输入包含在清单中、已声明的 `src/ezarch` Python 模块也进入 wheel；在 Git 工作区还检查所有已跟踪（含已暂存新增）的 skill 文件是否漏列。遗漏会指出文件或引用位置并停止打包，不自动把未知内容纳入公开发行。
 
 未跟踪且未被引用的临时文件仍不会打包；无 Git 的源码压缩包仍能检查链接与构建输入，但不能识别未声明、未引用的新文件。检查不解释任意程序的动态资源加载，也不验证 AI 是否会使用知识。所选文件及其父目录中的软链接/Windows junction 会被拒绝。这些是维护和发布保障，不参与用户作图流程。
 
