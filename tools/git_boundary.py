@@ -35,7 +35,7 @@ def findings(root, *, commits=None, max_bytes=10 * 1024 ** 2):
             if name not in allowed:
                 if Path(name).suffix.lower() in {'.dwg', '.dxf', '.blend', '.3dm', '.pdf', '.png', '.jpg', '.zip'}:
                     reasons.append('project/media file without explicit public-file declaration')
-                if parts[0] not in {'skills', 'tests', 'tools', '.github', 'README.md', 'CHANGELOG.md', 'LICENSE',
+                if parts[0] not in {'skills', 'tests', 'tools', '.github', 'AGENTS.md', 'README.md', 'CHANGELOG.md', 'LICENSE',
                                     '.gitignore', 'ruff.toml', '.ezarch-public-files.json', 'pyproject.toml'}:
                     reasons.append('path outside declared maintenance areas')
             if reasons:

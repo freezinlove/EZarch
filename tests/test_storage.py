@@ -6,6 +6,14 @@ from ezarch.storage import output_path
 from tools.git_boundary import findings
 
 
+def test_repository_guidance_allowed_without_allowing_arbitrary_root_notes(tmp_path):
+    subprocess.run(['git', '-C', str(tmp_path), 'init', '-q'], check=True)
+    for name in ('AGENTS.md', 'private-notes.md'):
+        (tmp_path / name).write_text('Synthetic text', encoding='utf-8')
+    subprocess.run(['git', '-C', str(tmp_path), 'add', 'AGENTS.md', 'private-notes.md'], check=True)
+    assert [row['path'] for row in findings(tmp_path)] == ['private-notes.md']
+
+
 def test_resolved_output_rejects_link_into_tool_tree(tmp_path, monkeypatch):
     monkeypatch.delenv('EZARCH_ALLOW_TOOL_WRITES', raising=False)
     tool = tmp_path / 'tool'
