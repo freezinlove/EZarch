@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -12,14 +13,19 @@ def isolated(monkeypatch, tmp_path):
     return tmp_path
 
 
-def test_locations_preference_environment_and_child_cache(isolated, monkeypatch):
+@pytest.mark.parametrize('parent_cache', [None, 'existing-parent-cache'])
+def test_locations_preference_environment_and_child_cache(isolated, monkeypatch, parent_cache):
+    if parent_cache is None:
+        monkeypatch.delenv('UV_CACHE_DIR', raising=False)
+    else:
+        monkeypatch.setenv('UV_CACHE_DIR', parent_cache)
     runtime.configure(isolated / 'chosen')
     assert runtime.locations()['home'] == isolated / '中文 runtime'
     monkeypatch.delenv('EZARCH_HOME')
     assert runtime.locations()['home'] == isolated / 'chosen'
     child = runtime.process_env()
     assert Path(child['UV_CACHE_DIR']).is_relative_to(isolated / 'chosen')
-    assert 'UV_CACHE_DIR' not in __import__('os').environ
+    assert os.environ.get('UV_CACHE_DIR') == parent_cache
 
 
 def test_download_integrity_retry_cache_and_old_file(isolated):

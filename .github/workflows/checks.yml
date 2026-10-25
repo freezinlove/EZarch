@@ -30,6 +30,11 @@ jobs:
           version: '0.11.26'
       - name: Locked runtime
         run: uv sync --project skills/ezarch --python 3.12 --frozen --extra model --extra dev
+      - name: Configure tool locations
+        shell: bash
+        run: |
+          echo "EZARCH_HOME=$RUNNER_TEMP/ezarch-runtime" >> "$GITHUB_ENV"
+          echo "EZARCH_CONFIG=$RUNNER_TEMP/ezarch-settings.json" >> "$GITHUB_ENV"
       - name: Blender integration setup
         run: uv run --project skills/ezarch --no-sync python -c "from ezarch.environment import install_blender; print(install_blender())"
       - name: Optional DWG converter integration setup

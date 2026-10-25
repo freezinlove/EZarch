@@ -3,12 +3,11 @@ import math
 
 import ezdxf
 import pytest
-from ezdxf import bbox
-
 from ezarch.drafting import Drawing
 from ezarch.furniture import chair_symbol, desk_symbol, furniture_symbol
 from ezarch.graphics import Canvas
 from ezarch.symbols import Symbol, color_style, linework_style, place_symbol
+from ezdxf import bbox
 
 
 def resource_with_back(kind):

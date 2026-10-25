@@ -13,6 +13,8 @@ def test_cached_converter_discovery_does_not_scan_other_applications(tmp_path, m
     executable = tmp_path / '.ezarch/tools/oda/ODAFileConverter.app/Contents/MacOS/ODAFileConverter'
     executable.parent.mkdir(parents=True)
     executable.touch()
+    monkeypatch.setenv('EZARCH_HOME', str(tmp_path / 'runtime'))
+    monkeypatch.setenv('EZARCH_CONFIG', str(tmp_path / 'settings.json'))
     monkeypatch.setattr(project, 'skill_root', lambda: tmp_path)
     monkeypatch.setattr(cad.shutil, 'which', lambda _: None)
     monkeypatch.delenv('EZARCH_ODA', raising=False)
