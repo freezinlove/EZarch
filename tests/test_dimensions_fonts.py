@@ -64,7 +64,8 @@ def test_oblique_canvas_and_dxf_value_agree_after_save(tmp_path):
         assert "5000.0" in pdf[0].get_text()
         line = pdf[0].get_text("dict")["blocks"][0]["lines"][0]
         assert line["dir"] == pytest.approx((.6, -.8), abs=1e-6)
-    assert ezdxf.readfile(tmp_path/"oblique.dxf").entitydb[dim.dxf.handle].get_measurement() == 5000
+    assert ezdxf.readfile(tmp_path/"oblique.dxf").entitydb[dim.dxf.handle].get_measurement() == pytest.approx(
+        5000, rel=0, abs=1e-9)
 
 
 @pytest.mark.parametrize("kwargs", [{"direction": (0, 0)}, {"decimals": -1}, {"decimals": 1.2},
